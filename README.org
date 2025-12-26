@@ -149,9 +149,6 @@ pinentry-mode loopback
 allow-loopback-pinentry
 #+end_src
 
-#+BEGIN_SRC bash :mkdirp yes :tangle scripts/install.sh
-
-#+END_SRC
 *** User Dirs
 
 #+begin_src bash :mkdirp yes :tangle configs/install.sh
@@ -209,18 +206,37 @@ XDG_TEMPLATES_DIR="$HOME/Misc"
 
 #+begin_src elisp :mkdirp yes :tangle configs/emacs/custom.el
   ;;; -*- lexical-binding: t -*-
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages nil))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
+  (custom-set-variables
+   ;; custom-set-variables was added by Custom.
+   ;; If you edit it by hand, you could mess it up, so be careful.
+   ;; Your init file should contain only one such instance.
+   ;; If there is more than one, they won't work right.
+   '(custom-safe-themes
+     '("972f792651d32b0506481b9e87b2fbc9b732ae9da2527562668c6e7d149fefda"
+       default))
+   '(make-backup-files nil)
+   '(package-selected-packages
+     '(clipetty corfu doom-modeline magit marginalia mixed-pitch
+                modus-themes multiple-cursors orderless org-journal
+                org-roam vertico zenburn-theme))
+   '(transient-default-level 5))
+  (custom-set-faces
+   ;; custom-set-faces was added by Custom.
+   ;; If you edit it by hand, you could mess it up, so be careful.
+   ;; Your init file should contain only one such instance.
+   ;; If there is more than one, they won't work right.
+   '(dired-header ((t (:family "Iosevka Etoile"))))
+   '(dired-mark ((t (:family "Iosevka Etoile"))))
+   '(dired-marked ((t (:inherit warning :family "Iosevka Etoile"))))
+   '(dired-perm-write ((t (:family "Iosevka Etoile"))))
+   '(dired-set-id ((t (:inherit font-lock-warning-face :family "Iosevka Etoile"))))
+   '(dired-special ((t (:family "Iosevka Etoile"))))
+   '(dired-symlink ((t (:inherit font-lock-keyword-face :family "Iosevka Etoile"))))
+   '(doom-modeline ((t (:family "Iosevka Etoile" :height 0.95 :foreground "#FFFF4D"))))
+   '(mode-line-emphasis ((t (:family "Iosevka Etoile" :height 0.95 :foreground "#FFFF4D"))))
+   '(widget-button ((t (:weight bold :family "Iosevka Etoile"))))
+   '(widget-inactive ((t (:inherit shadow :family "Iosevka Etoile"))))
+   '(widget-unselected ((t (:inherit widget-inactive :family "Iosevka Etoile")))))
 #+end_src
 
 #+begin_src elisp :mkdirp yes :tangle configs/emacs/init.el
@@ -275,13 +291,28 @@ XDG_TEMPLATES_DIR="$HOME/Misc"
   (define-key global-map (kbd "C-g") #'prot/keyboard-quit-dwim)
 
 
+  (set-face-attribute 'default nil
+                      :family "BigBlueTerm437 Nerd Font"
+                      :height 140)
+
+  (set-face-attribute 'fixed-pitch nil
+                      :family "BigBlueTerm437 Nerd Font"
+                      :height 140)
+
+  (set-face-attribute 'variable-pitch nil
+                      :family "Iosevka Etoile"
+                      :height 160)
+
+  (use-package mixed-pitch
+    :ensure t
+    :hook
+    ;; If you want it in all text modes:
+    (text-mode . mixed-pitch-mode))
 
   (menu-bar-mode -1)
-
-  (use-package modus-themes
-    :ensure t
-    :config
-    (load-theme 'modus-operandi :no-confirm-loading))
+  (tool-bar-mode -1)
+  (scroll-bar-mode -1)
+  (show-paren-mode 1)
 
   (use-package vertico
     :ensure t
@@ -305,7 +336,7 @@ XDG_TEMPLATES_DIR="$HOME/Misc"
   (use-package corfu
     :ensure t
     :hook (after-init . global-corfu-mode)
-    :bind (:map corfu-map ("<tab>" . corfu-complete))
+    :bind (:map corfu-map ("S-<tab>" . corfu-complete))
     :config
     (setq tab-always-indent 'complete)
     (setq corfu-preview-current nil)
@@ -319,13 +350,21 @@ XDG_TEMPLATES_DIR="$HOME/Misc"
       (corfu-history-mode 1)
       (add-to-list 'savehist-additional-variables 'corfu-history)))
 
-  (use-package corfu-terminal
+  (use-package spacious-padding
     :ensure nil
-    :load-path "~/.config/emacs/extras/corfu-terminal"
+    :load-path "~/.config/emacs/extras/spacious-padding"
     :config
-    (unless (display-graphic-p)
-      (corfu-terminal-mode +1))
-    )
+    (setq spacious-padding-widths
+          '( :internal-border-width 0
+             :header-line-width 8
+             :mode-line-width 0
+             :custom-button-width 3
+             :tab-width 2
+             :right-divider-width 10
+             :scroll-bar-width 0
+             :fringe-width 4))
+
+    (spacious-padding-mode 1))
 
   (use-package dired
     :ensure nil
@@ -343,13 +382,9 @@ XDG_TEMPLATES_DIR="$HOME/Misc"
   (use-package magit
     :ensure t
     :config
+    (setq magit-auto-revert-mode nil)
     (setq magit-save-repository-buffers 'dontask)
     :bind (("C-x g" . magit-status)))
-
-
-  (use-package clipetty
-    :ensure t
-    :hook (after-init . global-clipetty-mode))
 
   (use-package org-roam
     :ensure t
@@ -375,7 +410,6 @@ XDG_TEMPLATES_DIR="$HOME/Misc"
   (global-auto-revert-mode t)
 
   (setq gc-cons-threshold 100000000)
-
   (setq epg-pinentry-mode 'loopback)
 
   (use-package which-key
@@ -386,10 +420,103 @@ XDG_TEMPLATES_DIR="$HOME/Misc"
   (add-hook 'prog-mode-hook 'display-line-numbers-mode)
   (setq display-line-numbers 'relative)
 
-  (use-package zenburn-theme
+  (global-hl-line-mode 1)  ;; highlight current line -- see hl-line.el
+
+  (electric-indent-mode 1)
+  (add-hook 'after-change-major-mode-hook (lambda() (electric-indent-mode 1)))
+
+  (setq electric-indent-inhibit t)
+  (setq-default indent-tabs-mode nil)
+
+  (add-hook 'before-save-hook 'unix-newline)
+  (add-hook 'before-save-hook 'delete-trailing-whitespace)
+
+
+  (setq create-lockfiles nil
+        make-backup-files nil)
+
+  ;; Add frame borders and window dividers
+  (modify-all-frames-parameters
+   '((right-divider-width . 24)
+     (internal-border-width . 24)))
+  (dolist (face '(window-divider
+                  window-divider-first-pixel
+                  window-divider-last-pixel))
+    (face-spec-reset-face face)
+    (set-face-foreground face (face-attribute 'default :background)))
+  (set-face-background 'fringe (face-attribute 'default :background))
+
+  (use-package org-modern
+    :ensure nil
+    :load-path "/home/ssalva/.config/emacs/extras/org-modern"
+    :config
+    (setq
+     ;; Edit settings
+     org-auto-align-tags nil
+     org-tags-column 0
+     org-catch-invisible-edits 'show-and-error
+     org-special-ctrl-a/e t
+     org-insert-heading-respect-content t
+     org-modern-star nil
+     ;; Org styling, hide markup etc.
+     org-hide-emphasis-markers t
+     org-pretty-entities t
+     org-agenda-tags-column 0
+     org-ellipsis "…")
+
+    (global-org-modern-mode)
+    )
+
+
+  (use-package borland-blue-theme
+    :ensure nil
+    :load-path "/home/ssalva/.config/emacs/extras/borland-blue"
+    :config
+    (load-theme 'borland-blue t)
+    (set-face-background hl-line-face "#2020d4")
+    )
+
+  (blink-cursor-mode 0)
+
+  (use-package doom-modeline
+    :ensure t
+    :init
+    (doom-modeline-mode 1)
+    :config
+    (setq doom-modeline-total-line-number t)
+    (setq doom-modeline-height 1) ; optional
+    (custom-set-faces
+     '(doom-modeline ((t (:family "Iosevka Etoile" :height 0.95 :foreground "#FFFF4D"))))
+     '(mode-line-highlight ((t (:family "Iosevka Etoile" :height 0.95 :foreground "#FFFF4D"))))
+     '(mode-line-emphasis ((t (:family "Iosevka Etoile" :height 0.95 :foreground "#FFFF4D"))))
+     '(mode-line ((t (:family "Iosevka Etoile" :height 0.95 :foreground "#FFFF4D"))))
+     '(mode-line-active ((t (:family "Iosevka Etoile" :height 0.95 :foreground "#FFFF4D" :background "#0000a3")))) ; For 29+
+     '(mode-line-inactive ((t (:family "Iosevka Etoile" :height 0.95 :foreground "#a3a3a3" :background "#0000a3"))))))
+
+  (use-package org-journal
+    :ensure t
+    :defer t
+    :init
+    ;; Change default prefix key; needs to be set before loading org-journal
+    (setq org-journal-prefix-key "C-c j ")
+    :config
+    (setq org-journal-dir "~/Notes/journal/"
+          org-journal-date-format "%A, %d %B %Y")
+    (org-journal-mode))
+
+  (use-package multiple-cursors
     :ensure t
     :config
-    (load-theme 'zenburn t))
+    (global-set-key (kbd "C-S-c C-S-c") 'mc/edit-lines)
+    (global-set-key (kbd "C->")         'mc/mark-next-like-this)
+    (global-set-key (kbd "C-<")         'mc/mark-previous-like-this)
+    (global-set-key (kbd "C-c C-<")     'mc/mark-all-like-this)
+    (global-set-key (kbd "C-\"")        'mc/skip-to-next-like-this)
+    (global-set-key (kbd "C-:")         'mc/skip-to-previous-like-this))
+
+  ;;; tramp
+  ;;; http://stackoverflow.com/questions/13794433/how-to-disable-autosave-for-tramp-buffers-in-emacs
+  (setq tramp-auto-save-directory "/tmp")
 #+end_src
 
 *** Gammastep
