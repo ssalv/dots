@@ -1,0 +1,479 @@
+#+title: Solar System Dotfiles
+#+author: Salvatore Criscione
+#+OPTIONS: toc:2
+
+#+begin_example
+ ________________
+< Hello Dotfiles >
+ ----------------
+        \   ^__^
+         \  (xx)\_______
+            (__)\       )\/\
+             U ||----w |
+                ||     ||
+#+end_example
+
+* Table of Contents
+:PROPERTIES:
+:TOC:      :include all :ignore this
+:END:
+:CONTENTS:
+:END
+
+* Preface
+This documentation is related to my personal *Gentoo* configuration, designed with a single core principle:
+**Minimalism**: minimalistic system, reducing attack surface and maintenance.
+
+#+begin_quote
+Warning: This is my personal documentation and is not intended to be fully reproducible or serve as an public usage. Use it at your own risk..
+#+end_quote
+
+I use this configuration in many macchines, which are:
+- Deimos: MSI Katana 14bv (Gaming Machine)
+- Ceres: Thinkpad X395 (Personal Laptop)
+- Luna: Thinkpad T14 (Work Machine)
+
+   [[file:./screenshots/linux_desktop_secure.png]]
+
+** KISS
+That's my own points, Keep It Simple St.
+
+- I like having full control over my systems.
+- I find it annoying the constant need of an online account even for using a File Manager.
+- I appreciate and embrace free software.
+
+* Screenshots
+[[file:./screenshots/main1.png]]
+
+[[file:screenshots/main2.png]]
+
+* Install Script
+Setup the head of the Install Scripts to support the colors and stop if run as root ( you shouldn't! )
+
+#+BEGIN_SRC bash :mkdirp yes :tangle configs/install.sh
+  #!/bin/sh
+
+  CR='\033[0;31m'; CG='\033[0;32m'; CY='\033[0;36m'; CB='\033[0;34m'; CRE='\033[0m'
+
+  [ "$(id -u)" -ne 0 ] || {
+      printf "${CR}Do not run this script with root privileges! Exiting...${CRE}\n"
+      exit 1
+  }
+
+  if ! command -v stow >/dev/null 2>&1
+  then
+      printf "${CR}Missing Stow Exiting...${CRE}\n"
+      exit 1
+
+  fi
+  mkdir -p ~/{.ssh,.gnupg}
+  mkdir -p ~/.config
+#+END_SRC
+
+* Modules
+** System
+*** WM
+This little scripts let me start DWL properly setup
+#+BEGIN_SRC bash :mkdirp yes :tangle-mode (identity #o755) :tangle bins/start-dwl.sh
+  #!/bin/sh
+
+  # --- Session settings ---
+  export XDG_CURRENT_DESKTOP=wlroots
+  export XDG_SESSION_TYPE=wayland
+  export XDG_SESSION_DESKTOP=wlroots
+
+  # Hardware cursors not yet working on wlroots
+  export WLR_NO_HARDWARE_CURSORS=1
+
+  # General wayland environment variables
+  export QT_QPA_PLATFORM=wayland
+  export QT_WAYLAND_DISABLE_WINDOWDECORATION=1
+  # Firefox wayland environment variable
+  export MOZ_ENABLE_WAYLAND=1
+  export MOZ_USE_XINPUT2=1
+
+  # Starting dbus-session might require hard path.
+  dwl -s /home/ssalva/.local/bin/dwl-startup.sh
+#+END_SRC
+#+BEGIN_SRC bash :mkdirp yes :tangle-mode (identity #o755) :tangle bins/dwl-startup.sh
+    #!/bin/bash
+
+    # Kill already running dublicate process
+    _ps="dwlb foot swaybg swayidle"
+    for _prs in $_ps; do
+        if [ "$(pidof "${_prs}")" ]; then
+             killall -9 "${_prs}"
+        fi
+     done
+
+    # Start our applications
+    swaybg -i ~/Pictures/Wallpapers/gentoo-abducted-1680x1050.png -m fill -c 0000a3 &
+    dwlb -no-active-color-title &
+    swayidle -w \
+             timeout 300 'swaylock --daemonize -c ~/.config/swaylock/config' \
+             timeout 200 'brightnessctl s 20%' resume 'brightnessctl s 50%' \
+             before-sleep 'swaylock --daemonize -c ~/.config/swaylock/config' &
+
+    exec gnome-keyring-daemon --start --components=secrets &
+    exec export ${gnome-keyring-daemon} &
+
+    export XDG_CONFIG_HOME="$HOME/.config"
+    export XDG_DATA_HOME="$HOME/.local/share"
+    export XDG_CACHE_HOME="$HOME/.cache"
+
+    i3status | dwlb -status-stdin all &
+
+    exec dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=wlroots
+
+    sleep 1
+
+    gsettings set org.gnome.desktop.interface gtk-theme 'minidark'
+    gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
+#+END_SRC
+
+#+BEGIN_SRC bash :mkdirp yes :tangle configs/install.sh
+  mkdir -p ~/.local/bin
+  stow -v -R -d .. -t ~/.local/bin bins
+  chmod +x ~/.local/bin/start-dwl.sh
+  chmod +x ~/.local/bin/dwl-startup.sh
+#+END_SRC
+
+*** GPG
+Just enable the posibility to being used from Emacs...
+
+#+begin_src conf :tangle configs/gnupg/gpg.conf :mkdirp yes
+pinentry-mode loopback
+#+end_src
+
+#+begin_src conf :tangle configs/gnupg/gpg-agent.conf :mkdirp yes
+allow-loopback-pinentry
+#+end_src
+
+#+BEGIN_SRC bash :mkdirp yes :tangle scripts/install.sh
+
+#+END_SRC
+*** User Dirs
+
+#+begin_src bash :mkdirp yes :tangle configs/install.sh
+  mkdir -p ~/{dev,Download,Notes,Pictures,Music,Vids,Misc}
+  stow -v -R -t ~/.config/ user-dirs
+#+end_src
+
+#+begin_src conf :mkdirp yes :tangle configs/user-dirs/user-dirs.dirs
+# This file is written by xdg-user-dirs-update
+# If you want to change or add directories, just edit the line you're
+# interested in. All local changes will be retained on the next run.
+# Format is XDG_xxx_DIR="$HOME/yyy", where yyy is a shell-escaped
+# homedir-relative path, or XDG_xxx_DIR="/yyy", where /yyy is an
+# absolute path. No other format is supported.
+#
+XDG_DOWNLOAD_DIR="$HOME/Download"
+XDG_DOCUMENTS_DIR="$HOME/Notes"
+XDG_MUSIC_DIR="$HOME/Music"
+XDG_PICTURES_DIR="$HOME/Pictures"
+XDG_VIDEOS_DIR="$HOME/Vids"
+XDG_DESKTOP_DIR="$HOME/Misc"
+XDG_PUBLICSHARE_DIR="$HOME/Misc"
+XDG_TEMPLATES_DIR="$HOME/Misc"
+#+end_src
+
+** Software
+*** Wallpaper
+
+#+begin_src bash :mkdirp yes :tangle configs/install.sh
+  mkdir -p ~/Pictures/Wallpapers
+  stow -v -R -d ../assets -t ~/Pictures/Wallpapers Wallpapers
+#+end_src
+
+*** Foot
+
+#+BEGIN_SRC toml :mkdirp yes :tangle configs/foot/foot.ini
+  [main]
+  include=/usr/share/foot/themes/zenburn
+  workers=14
+  font=BigBlueTermPlus Nerd Font:size=14
+  pad=16x16 center
+
+  [colors]
+  background=0000a3
+#+END_SRC
+
+
+#+begin_src bash :mkdirp yes :tangle configs/install.sh
+  mv ~/.config/foot ~/.config/foot_bck
+  mkdir -p ~/.config/foot
+  stow -v -R -t ~/.config/foot foot
+#+end_src
+
+*** Emacs
+
+#+begin_src elisp :mkdirp yes :tangle configs/emacs/custom.el
+  ;;; -*- lexical-binding: t -*-
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages nil))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
+#+end_src
+
+#+begin_src elisp :mkdirp yes :tangle configs/emacs/init.el
+  ;; Set the Custom file
+  (setq custom-file (locate-user-emacs-file "custom.el"))
+  (load custom-file :no-error-if-file-is-missing)
+
+  (require 'package)
+  (package-initialize)
+
+  (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
+
+  (when (< emacs-major-version 29)
+    (unless (package-installed-p 'use-package)
+      (unless package-archive-contents
+        (package-refresh-contents))
+      (package-install 'use-package)))
+
+  (add-to-list 'display-buffer-alist
+               '("\\`\\*\\(Warnings\\|Compile-Log\\)\\*\\'"
+                 (display-buffer-no-window)
+                 (allow-no-window . t)))
+
+  (use-package delsel
+    :ensure nil ; no need to install it as it is built-in
+    :hook (after-init . delete-selection-mode))
+
+  (defun prot/keyboard-quit-dwim ()
+    "Do-What-I-Mean behaviour for a general `keyboard-quit'.
+
+  The generic `keyboard-quit' does not do the expected thing when
+  the minibuffer is open.  Whereas we want it to close the
+  minibuffer, even without explicitly focusing it.
+
+  The DWIM behaviour of this command is as follows:
+
+  - When the region is active, disable it.
+  - When a minibuffer is open, but not focused, close the minibuffer.
+  - When the Completions buffer is selected, close it.
+  - In every other case use the regular `keyboard-quit'."
+    (interactive)
+    (cond
+     ((region-active-p)
+      (keyboard-quit))
+     ((derived-mode-p 'completion-list-mode)
+      (delete-completion-window))
+     ((> (minibuffer-depth) 0)
+      (abort-recursive-edit))
+     (t
+      (keyboard-quit))))
+
+  (define-key global-map (kbd "C-g") #'prot/keyboard-quit-dwim)
+
+
+
+  (menu-bar-mode -1)
+
+  (use-package modus-themes
+    :ensure t
+    :config
+    (load-theme 'modus-operandi :no-confirm-loading))
+
+  (use-package vertico
+    :ensure t
+    :hook (after-init . vertico-mode))
+
+  (use-package marginalia
+    :ensure t
+    :hook (after-init . marginalia-mode))
+
+  (use-package orderless
+    :ensure t
+    :config
+    (setq completion-styles '(orderless basic))
+    (setq completion-category-defaults nil)
+    (setq completion-category-overrides nil))
+
+  (use-package savehist
+    :ensure nil ; it is built-in
+    :hook (after-init . savehist-mode))
+
+  (use-package corfu
+    :ensure t
+    :hook (after-init . global-corfu-mode)
+    :bind (:map corfu-map ("<tab>" . corfu-complete))
+    :config
+    (setq tab-always-indent 'complete)
+    (setq corfu-preview-current nil)
+    (setq corfu-min-width 20)
+
+    (setq corfu-popupinfo-delay '(1.25 . 0.5))
+    (corfu-popupinfo-mode 1) ; shows documentation after `corfu-popupinfo-delay'
+
+    ;; Sort by input history (no need to modify `corfu-sort-function').
+    (with-eval-after-load 'savehist
+      (corfu-history-mode 1)
+      (add-to-list 'savehist-additional-variables 'corfu-history)))
+
+  (use-package corfu-terminal
+    :ensure nil
+    :load-path "~/.config/emacs/extras/corfu-terminal"
+    :config
+    (unless (display-graphic-p)
+      (corfu-terminal-mode +1))
+    )
+
+  (use-package dired
+    :ensure nil
+    :commands (dired)
+    :hook
+    ((dired-mode . dired-hide-details-mode)
+     (dired-mode . hl-line-mode))
+    :config
+    (setq dired-recursive-copies 'always)
+    (setq dired-recursive-deletes 'always)
+    (setq delete-by-moving-to-trash t)
+    (setq dired-dwim-target t))
+
+
+  (use-package magit
+    :ensure t
+    :config
+    (setq magit-save-repository-buffers 'dontask)
+    :bind (("C-x g" . magit-status)))
+
+
+  (use-package clipetty
+    :ensure t
+    :hook (after-init . global-clipetty-mode))
+
+  (use-package org-roam
+    :ensure t
+    :custom
+    (org-roam-directory (file-truename "~/Notes")) ; directory for your notes
+    :bind (("C-c n l" . org-roam-buffer-toggle)
+           ("C-c n f" . org-roam-node-find)
+           ("C-c n g" . org-roam-graph)
+           ("C-c n i" . org-roam-node-insert)
+           ("C-c n c" . org-roam-capture)
+           ;; Dailies
+           ("C-c n j" . org-roam-dailies-capture-today))
+    :config
+    (require 'org-roam-protocol)
+
+    (org-roam-setup))
+
+
+  ;; Some Defaults
+  (set-language-environment "UTF-8")
+  (prefer-coding-system 'utf-8)
+
+  (global-auto-revert-mode t)
+
+  (setq gc-cons-threshold 100000000)
+
+  (setq epg-pinentry-mode 'loopback)
+
+  (use-package which-key
+    :ensure nil ;; Since Emacs 30.1 is included
+    :config
+    (which-key-mode))
+
+  (add-hook 'prog-mode-hook 'display-line-numbers-mode)
+  (setq display-line-numbers 'relative)
+
+  (use-package zenburn-theme
+    :ensure t
+    :config
+    (load-theme 'zenburn t))
+#+end_src
+
+*** Gammastep
+#+BEGIN_SRC bash :mkdirp yes :tangle bins/gammastep.sh :tangle-mode (identity #o755)
+  #!/usr/bin/env bash
+
+  pid=$(pgrep gammastep)
+
+  if [[ $1 = "toggle" ]]; then
+      if pgrep -x "gammastep" > /dev/null; then
+  	kill -9 $(pgrep -x "gammastep");
+      else
+  	gammastep -O 5600  2>/dev/null &
+      fi
+  fi
+
+  if pgrep -x "gammastep" > /dev/null; then
+      echo "Filtered"
+  else
+      echo "-"
+  fi
+#+END_SRC
+
+*** Tmux
+This is a very basic tmux configuration
+
+#+begin_src conf :mkdirp yes :tangle configs/tmux/.tmux.conf
+unbind C-b
+set -g prefix C-x
+bind C-x send-prefix
+set -g mode-keys emacs
+set -g status-keys emacs
+set -s escape-time 0
+
+set -g mouse on
+
+# Notifying if other windows has activities
+setw -g monitor-activity on
+
+# Renumber windows on window close
+set -g renumber-windows on
+
+set -g base-index 1
+setw -g pane-base-index 1
+
+# Enable mouse control (clickable windows, panes, resizable panes)
+set -g mouse on
+
+# split panes using | and -
+bind s split-window -h
+bind v split-window -v
+
+unbind q
+bind q kill-window
+
+unbind '"'
+unbind %
+
+# Probably not needed but rather safe than sorry
+set -g default-terminal "screen-256color"
+set -ag terminal-overrides ",xterm-256color:Tc"
+
+BACKGROUND="#0000a3"
+set -g @BACKGROUND $BACKGROUND
+set -g @LGRAY "#45475a"
+
+# Window title should be set to the tmux session name
+set-option -g set-titles on
+set-option -g set-titles-string "#S"
+
+# Statusbar settings
+set -g status-position top
+set -g status-bg "$BACKGROUND"
+set -g status-fg white
+set -g status-left '#[bg=#{@BACKGROUND}]#[fg=magenta]#S #[fg=#{@LGRAY}]|'
+set -g status-right ''
+set -g status 2
+set -g 'status-format[1]' ''
+
+
+
+setw -g window-status-separator ""
+
+
+# COLORS
+set -g pane-active-border-style "bg=#{@BACKGROUND} fg=yellow"
+#+END_SRC
