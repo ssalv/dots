@@ -585,7 +585,12 @@ unbind %
 # Probably not needed but rather safe than sorry
 set -g default-terminal "screen-256color"
 set -ag terminal-overrides ",xterm-256color:Tc"
-#+END_SRC
+
+
+set -g status-position "top"
+set -g status-style bg=default,fg=default
+set -g status-justify "left"
+#+end_src
 
 *** Waybar
 #+begin_src elisp :mkdirp yes :tangle configs/waybar/config
