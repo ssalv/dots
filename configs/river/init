@@ -1,0 +1,167 @@
+#!/bin/sh
+
+riverctl send-layout-cmd rivertile "main-count 1"
+
+riverctl border-width 2
+riverctl border-color-focused 0xf1f1f1
+riverctl border-color-unfocused 0x111111
+
+riverctl send-layout-cmd rivertile "main-ratio 0.70"
+
+# Loop through all input devices and enable tap-to-click
+for input in $(riverctl list-inputs); do
+    riverctl input "$input" tap enabled
+    riverctl input "$input" tap-button-map lrm
+done
+
+mod="Super"
+
+if command -v rivertile >/dev/null 2>&1; then
+    rivertile -view-padding 0 -outer-padding 0 &
+    riverctl default-layout rivertile
+fi
+
+# Tags
+
+# Emacs - The Mothership
+riverctl rule-add -app-id "emacs-mothership" tags 1
+
+# Browsers - The Observatory
+riverctl rule-add -app-id "firefox" tags 2
+riverctl rule-add -app-id "org.mozilla.firefox" tags 2  # Flatpak app-id
+riverctl rule-add -app-id "chromium" tags 2
+riverctl rule-add -app-id "chrome" tags 2
+
+# Terminal - Ground Control
+riverctl rule-add -app-id "foot" tags 4
+riverctl rule-add -app-id "foot-tmux" tags 4
+
+riverctl rule-add -app-id "emacs-mu4e" tags 8
+riverctl rule-add -app-id "org.mozilla.thunderbird" tags 8
+riverctl rule-add -app-id "org.mozilla.Thunderbird" tags 8
+  
+# File Manager - The Barn / Dired
+riverctl rule-add -app-id "emacs-dired" tags 16
+
+# Media - The Radio Tower
+riverctl rule-add -app-id "com.spotify.client" tags 32
+riverctl rule-add -app-id "com.spotify.Client" tags 32
+riverctl rule-add -app-id "Spotify" tags 32
+riverctl rule-add -app-id "spotify" tags 32
+
+riverctl focus-follows-cursor normal   # sloppyfocus = 1
+riverctl set-repeat 25 600             # repeat_rate / repeat_delay
+
+# Keybindings
+
+riverctl map normal  $mod e  spawn "emacs -name 'emacs-mothership'"
+riverctl map normal  $mod x  spawn "wofi --show drun"
+riverctl map normal  $mod p  spawn "/home/ssalva/.local/bin/slurpshot"
+riverctl map normal  "$mod+Shift" Return spawn "foot"
+riverctl map normal  $mod Return spawn "foot tmux"
+riverctl map normal  $mod t  spawn "emacs -name 'emacs-dired' --eval '(dired \"~\")'"
+riverctl map normal  "$mod+Shift" T spawn "emacs -name 'emacs-mu4e' --eval '(mu4e)'"
+# Lock
+riverctl map normal "$mod+Shift" L spawn "swaylock --daemonize -c ~/.config/swaylock/config"
+
+# Focus / layout control 
+riverctl map normal $mod j focus-view next
+riverctl map normal $mod k focus-view previous
+
+riverctl map normal $mod h send-layout-cmd rivertile "main-ratio -0.05"
+riverctl map normal $mod l send-layout-cmd rivertile "main-ratio +0.05"
+
+riverctl map normal $mod i send-layout-cmd rivertile "main-count +1"
+riverctl map normal $mod d send-layout-cmd rivertile "main-count -1"
+
+riverctl map normal $mod f  toggle-fullscreen
+
+riverctl map normal $mod q close
+
+riverctl map normal "$mod+Shift" q exit
+
+
+for i in $(seq 1 6); do
+    tags=$((1 << ($i - 1)))
+    riverctl map normal Super $i set-focused-tags $tags
+    riverctl map normal Super+Shift $i set-view-tags $tags
+done
+
+# Focus outputs
+riverctl map normal  $mod comma  focus-output left
+riverctl map normal  $mod period focus-output right
+
+# Move view between outputs (like tagmon)
+riverctl map normal "$mod+Shift" comma  move-view left
+riverctl map normal "$mod+Shift" period move-view right
+
+# Brightness keys
+riverctl map normal None XF86MonBrightnessUp   spawn "brightnessctl s 5%+"
+riverctl map normal None XF86MonBrightnessDown spawn "brightnessctl s 5%-"
+
+# Audio keys
+riverctl map normal None XF86AudioMute        spawn "/usr/bin/wpctl set-mute @DEFAULT_SINK@ toggle"
+riverctl map normal None XF86AudioMicMute     spawn "/usr/bin/wpctl set-mute @DEFAULT_SOURCE@ toggle"
+riverctl map normal None XF86AudioRaiseVolume spawn "/usr/bin/wpctl set-volume @DEFAULT_SINK@ 5%+ --limit 1.0"
+riverctl map normal None XF86AudioLowerVolume spawn "/usr/bin/wpctl set-volume @DEFAULT_SINK@ 5%-"
+
+wlr-randr --output eDP-1 --scale 1.25
+
+# Kill already running duplicate processes
+_ps="dwlb mako swaybg swayidle xdg-desktop-portal xdg-desktop-portal-wlr xdg-desktop-portal-gtk"
+for _prs in $_ps; do
+    if pidof "$_prs" >/dev/null 2>&1; then
+        killall -9 "$_prs" 2>/dev/null
+    fi
+done
+
+# -----------------------------------------------------------------------------
+# Environment
+# -----------------------------------------------------------------------------
+export XDG_CONFIG_HOME="$HOME/.config"
+export XDG_DATA_HOME="$HOME/.local/share"
+export XDG_CACHE_HOME="$HOME/.cache"
+export XDG_RUNTIME_DIR="/run/user/$UID"
+
+# Make sure D-Bus env is correct for Wayland sessions
+if command -v dbus-update-activation-environment >/dev/null 2>&1; then
+    dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=river
+fi
+
+gnome-keyring-daemon --start --components=secrets &
+
+if command -v swaybg >/dev/null 2>&1; then
+    swaybg -i "$HOME/Pictures/Wallpapers/wp.png" &
+fi
+
+if command -v mako >/dev/null 2>&1; then
+    riverctl spawn mako
+fi
+
+if command -v waybar >/dev/null 2>&1; then
+    riverctl spawn waybar
+fi
+
+
+if command -v swayidle >/dev/null 2>&1; then
+    swayidle -w \
+        timeout 300 'swaylock --daemonize' \
+        timeout 200 'brightnessctl s 20%' resume 'brightnessctl s 50%' \
+        before-sleep 'swaylock --daemonize' &
+fi
+
+for portal in xdg-desktop-portal-gtk xdg-desktop-portal-wlr xdg-desktop-portal; do
+    pkill -e "$portal" 2>/dev/null || true
+done
+
+if [ -x /usr/libexec/xdg-desktop-portal-wlr ]; then
+    /usr/libexec/xdg-desktop-portal-wlr &
+fi
+
+if [ -x /usr/libexec/xdg-desktop-portal-gtk ]; then
+    /usr/libexec/xdg-desktop-portal-gtk &
+fi
+
+if [ -x /usr/libexec/xdg-desktop-portal ]; then
+    /usr/libexec/xdg-desktop-portal &
+fi

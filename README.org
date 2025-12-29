@@ -74,7 +74,7 @@ Setup the head of the Install Scripts to support the colors and stop if run as r
 ** System
 *** WM
 This little scripts let me start DWL properly setup
-#+BEGIN_SRC bash :mkdirp yes :tangle-mode (identity #o755) :tangle bins/start-dwl.sh
+#+BEGIN_SRC bash :mkdirp yes :tangle-mode (identity #o755) :tangle bins/start-river.sh
   #!/bin/sh
 
   # --- Session settings ---
@@ -93,43 +93,178 @@ This little scripts let me start DWL properly setup
   export MOZ_USE_XINPUT2=1
 
   # Starting dbus-session might require hard path.
-  dwl -s /home/ssalva/.local/bin/dwl-startup.sh
+  exec river
 #+END_SRC
-#+BEGIN_SRC bash :mkdirp yes :tangle-mode (identity #o755) :tangle bins/dwl-startup.sh
-    #!/bin/bash
+#+BEGIN_SRC bash :mkdirp yes :tangle-mode (identity #o755) :tangle configs/river/init
+  #!/bin/sh
 
-    # Kill already running dublicate process
-    _ps="dwlb foot swaybg swayidle"
-    for _prs in $_ps; do
-        if [ "$(pidof "${_prs}")" ]; then
-             killall -9 "${_prs}"
-        fi
-     done
+  riverctl send-layout-cmd rivertile "main-count 1"
 
-    # Start our applications
-    swaybg -i ~/Pictures/Wallpapers/gentoo-abducted-1680x1050.png -m fill -c 0000a3 &
-    dwlb -no-active-color-title &
-    swayidle -w \
-             timeout 300 'swaylock --daemonize -c ~/.config/swaylock/config' \
-             timeout 200 'brightnessctl s 20%' resume 'brightnessctl s 50%' \
-             before-sleep 'swaylock --daemonize -c ~/.config/swaylock/config' &
+  riverctl border-width 2
+  riverctl border-color-focused 0xf1f1f1
+  riverctl border-color-unfocused 0x111111
 
-    exec gnome-keyring-daemon --start --components=secrets &
-    exec export ${gnome-keyring-daemon} &
+  riverctl send-layout-cmd rivertile "main-ratio 0.70"
 
-    export XDG_CONFIG_HOME="$HOME/.config"
-    export XDG_DATA_HOME="$HOME/.local/share"
-    export XDG_CACHE_HOME="$HOME/.cache"
+  # Loop through all input devices and enable tap-to-click
+  for input in $(riverctl list-inputs); do
+      riverctl input "$input" tap enabled
+      riverctl input "$input" tap-button-map lrm
+  done
 
-    i3status | dwlb -status-stdin all &
+  mod="Super"
 
-    exec dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=wlroots
+  if command -v rivertile >/dev/null 2>&1; then
+      rivertile -view-padding 0 -outer-padding 0 &
+      riverctl default-layout rivertile
+  fi
 
-    sleep 1
+  # Tags
 
-    gsettings set org.gnome.desktop.interface gtk-theme 'minidark'
-    gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
+  # Emacs - The Mothership
+  riverctl rule-add -app-id "emacs-mothership" tags 1
+
+  # Browsers - The Observatory
+  riverctl rule-add -app-id "firefox" tags 2
+  riverctl rule-add -app-id "org.mozilla.firefox" tags 2  # Flatpak app-id
+  riverctl rule-add -app-id "chromium" tags 2
+  riverctl rule-add -app-id "chrome" tags 2
+
+  # Terminal - Ground Control
+  riverctl rule-add -app-id "foot" tags 4
+  riverctl rule-add -app-id "foot-tmux" tags 4
+
+  riverctl rule-add -app-id "emacs-mu4e" tags 8
+  riverctl rule-add -app-id "org.mozilla.thunderbird" tags 8
+  riverctl rule-add -app-id "org.mozilla.Thunderbird" tags 8
+    
+  # File Manager - The Barn / Dired
+  riverctl rule-add -app-id "emacs-dired" tags 16
+
+  # Media - The Radio Tower
+  riverctl rule-add -app-id "com.spotify.client" tags 32
+  riverctl rule-add -app-id "com.spotify.Client" tags 32
+  riverctl rule-add -app-id "Spotify" tags 32
+  riverctl rule-add -app-id "spotify" tags 32
+
+  riverctl focus-follows-cursor normal   # sloppyfocus = 1
+  riverctl set-repeat 25 600             # repeat_rate / repeat_delay
+
+  # Keybindings
+
+  riverctl map normal  $mod e  spawn "emacs -name 'emacs-mothership'"
+  riverctl map normal  $mod x  spawn "wofi --show drun"
+  riverctl map normal  $mod p  spawn "/home/ssalva/.local/bin/slurpshot"
+  riverctl map normal  "$mod+Shift" Return spawn "foot"
+  riverctl map normal  $mod Return spawn "foot tmux"
+  riverctl map normal  $mod t  spawn "emacs -name 'emacs-dired' --eval '(dired \"~\")'"
+  riverctl map normal  "$mod+Shift" T spawn "emacs -name 'emacs-mu4e' --eval '(mu4e)'"
+  # Lock
+  riverctl map normal "$mod+Shift" L spawn "swaylock --daemonize -c ~/.config/swaylock/config"
+
+  # Focus / layout control 
+  riverctl map normal $mod j focus-view next
+  riverctl map normal $mod k focus-view previous
+
+  riverctl map normal $mod h send-layout-cmd rivertile "main-ratio -0.05"
+  riverctl map normal $mod l send-layout-cmd rivertile "main-ratio +0.05"
+
+  riverctl map normal $mod i send-layout-cmd rivertile "main-count +1"
+  riverctl map normal $mod d send-layout-cmd rivertile "main-count -1"
+
+  riverctl map normal $mod f  toggle-fullscreen
+
+  riverctl map normal $mod q close
+
+  riverctl map normal "$mod+Shift" q exit
+
+
+  for i in $(seq 1 6); do
+      tags=$((1 << ($i - 1)))
+      riverctl map normal Super $i set-focused-tags $tags
+      riverctl map normal Super+Shift $i set-view-tags $tags
+  done
+
+  # Focus outputs
+  riverctl map normal  $mod comma  focus-output left
+  riverctl map normal  $mod period focus-output right
+
+  # Move view between outputs (like tagmon)
+  riverctl map normal "$mod+Shift" comma  move-view left
+  riverctl map normal "$mod+Shift" period move-view right
+
+  # Brightness keys
+  riverctl map normal None XF86MonBrightnessUp   spawn "brightnessctl s 5%+"
+  riverctl map normal None XF86MonBrightnessDown spawn "brightnessctl s 5%-"
+
+  # Audio keys
+  riverctl map normal None XF86AudioMute        spawn "/usr/bin/wpctl set-mute @DEFAULT_SINK@ toggle"
+  riverctl map normal None XF86AudioMicMute     spawn "/usr/bin/wpctl set-mute @DEFAULT_SOURCE@ toggle"
+  riverctl map normal None XF86AudioRaiseVolume spawn "/usr/bin/wpctl set-volume @DEFAULT_SINK@ 5%+ --limit 1.0"
+  riverctl map normal None XF86AudioLowerVolume spawn "/usr/bin/wpctl set-volume @DEFAULT_SINK@ 5%-"
+
+  wlr-randr --output eDP-1 --scale 1.25
+
+  # Kill already running duplicate processes
+  _ps="dwlb mako swaybg swayidle xdg-desktop-portal xdg-desktop-portal-wlr xdg-desktop-portal-gtk"
+  for _prs in $_ps; do
+      if pidof "$_prs" >/dev/null 2>&1; then
+          killall -9 "$_prs" 2>/dev/null
+      fi
+  done
+
+  # -----------------------------------------------------------------------------
+  # Environment
+  # -----------------------------------------------------------------------------
+  export XDG_CONFIG_HOME="$HOME/.config"
+  export XDG_DATA_HOME="$HOME/.local/share"
+  export XDG_CACHE_HOME="$HOME/.cache"
+  export XDG_RUNTIME_DIR="/run/user/$UID"
+
+  # Make sure D-Bus env is correct for Wayland sessions
+  if command -v dbus-update-activation-environment >/dev/null 2>&1; then
+      dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=river
+  fi
+
+  gnome-keyring-daemon --start --components=secrets &
+
+  if command -v swaybg >/dev/null 2>&1; then
+      swaybg -i "$HOME/Pictures/Wallpapers/wp.png" &
+  fi
+
+  if command -v mako >/dev/null 2>&1; then
+      riverctl spawn mako
+  fi
+
+  if command -v waybar >/dev/null 2>&1; then
+      riverctl spawn waybar
+  fi
+
+
+  if command -v swayidle >/dev/null 2>&1; then
+      swayidle -w \
+          timeout 300 'swaylock --daemonize' \
+          timeout 200 'brightnessctl s 20%' resume 'brightnessctl s 50%' \
+          before-sleep 'swaylock --daemonize' &
+  fi
+
+  for portal in xdg-desktop-portal-gtk xdg-desktop-portal-wlr xdg-desktop-portal; do
+      pkill -e "$portal" 2>/dev/null || true
+  done
+
+  if [ -x /usr/libexec/xdg-desktop-portal-wlr ]; then
+      /usr/libexec/xdg-desktop-portal-wlr &
+  fi
+
+  if [ -x /usr/libexec/xdg-desktop-portal-gtk ]; then
+      /usr/libexec/xdg-desktop-portal-gtk &
+  fi
+
+  if [ -x /usr/libexec/xdg-desktop-portal ]; then
+      /usr/libexec/xdg-desktop-portal &
+  fi
 #+END_SRC
+
 
 #+BEGIN_SRC bash :mkdirp yes :tangle configs/install.sh
   mkdir -p ~/.local/bin
@@ -137,17 +272,6 @@ This little scripts let me start DWL properly setup
   chmod +x ~/.local/bin/start-dwl.sh
   chmod +x ~/.local/bin/dwl-startup.sh
 #+END_SRC
-
-*** GPG
-Just enable the posibility to being used from Emacs...
-
-#+begin_src conf :tangle configs/gnupg/gpg.conf :mkdirp yes
-pinentry-mode loopback
-#+end_src
-
-#+begin_src conf :tangle configs/gnupg/gpg-agent.conf :mkdirp yes
-allow-loopback-pinentry
-#+end_src
 
 *** User Dirs
 
@@ -164,7 +288,7 @@ allow-loopback-pinentry
 # homedir-relative path, or XDG_xxx_DIR="/yyy", where /yyy is an
 # absolute path. No other format is supported.
 #
-XDG_DOWNLOAD_DIR="$HOME/Download"
+XDG_DOWNLOAD_DIR="$HOME/Downloads"
 XDG_DOCUMENTS_DIR="$HOME/Notes"
 XDG_MUSIC_DIR="$HOME/Music"
 XDG_PICTURES_DIR="$HOME/Pictures"
@@ -186,13 +310,13 @@ XDG_TEMPLATES_DIR="$HOME/Misc"
 
 #+BEGIN_SRC toml :mkdirp yes :tangle configs/foot/foot.ini
   [main]
-  include=/usr/share/foot/themes/zenburn
+  include=/usr/share/foot/themes/modus-operandi
   workers=14
-  font=BigBlueTermPlus Nerd Font:size=14
+  font=iMWritingMono Nerd Font:size=13
   pad=16x16 center
 
   [colors]
-  background=0000a3
+  background=f1f1f1
 #+END_SRC
 
 
@@ -204,319 +328,202 @@ XDG_TEMPLATES_DIR="$HOME/Misc"
 
 *** Emacs
 
-#+begin_src elisp :mkdirp yes :tangle configs/emacs/custom.el
-  ;;; -*- lexical-binding: t -*-
-  (custom-set-variables
-   ;; custom-set-variables was added by Custom.
-   ;; If you edit it by hand, you could mess it up, so be careful.
-   ;; Your init file should contain only one such instance.
-   ;; If there is more than one, they won't work right.
-   '(custom-safe-themes
-     '("972f792651d32b0506481b9e87b2fbc9b732ae9da2527562668c6e7d149fefda"
-       default))
-   '(make-backup-files nil)
-   '(package-selected-packages
-     '(clipetty corfu doom-modeline magit marginalia mixed-pitch
-                modus-themes multiple-cursors orderless org-journal
-                org-roam vertico zenburn-theme))
-   '(transient-default-level 5))
-  (custom-set-faces
-   ;; custom-set-faces was added by Custom.
-   ;; If you edit it by hand, you could mess it up, so be careful.
-   ;; Your init file should contain only one such instance.
-   ;; If there is more than one, they won't work right.
-   '(dired-header ((t (:family "Iosevka Etoile"))))
-   '(dired-mark ((t (:family "Iosevka Etoile"))))
-   '(dired-marked ((t (:inherit warning :family "Iosevka Etoile"))))
-   '(dired-perm-write ((t (:family "Iosevka Etoile"))))
-   '(dired-set-id ((t (:inherit font-lock-warning-face :family "Iosevka Etoile"))))
-   '(dired-special ((t (:family "Iosevka Etoile"))))
-   '(dired-symlink ((t (:inherit font-lock-keyword-face :family "Iosevka Etoile"))))
-   '(doom-modeline ((t (:family "Iosevka Etoile" :height 0.95 :foreground "#FFFF4D"))))
-   '(mode-line-emphasis ((t (:family "Iosevka Etoile" :height 0.95 :foreground "#FFFF4D"))))
-   '(widget-button ((t (:weight bold :family "Iosevka Etoile"))))
-   '(widget-inactive ((t (:inherit shadow :family "Iosevka Etoile"))))
-   '(widget-unselected ((t (:inherit widget-inactive :family "Iosevka Etoile")))))
-#+end_src
+#+begin_src elisp
+;; Set the custom loader file
+(setq custom-file (locate-user-emacs-file "custom.el"))
+(load custom-file :no-error-if-file-is-missing)
 
-#+begin_src elisp :mkdirp yes :tangle configs/emacs/init.el
-  ;; Set the Custom file
-  (setq custom-file (locate-user-emacs-file "custom.el"))
-  (load custom-file :no-error-if-file-is-missing)
+(require 'package)
+(package-initialize)
 
-  (require 'package)
-  (package-initialize)
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
 
-  (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
+(when (< emacs-major-version 29)
+  (unless (package-installed-p 'use-package)
+    (unless package-archive-contents
+      (package-refresh-contents))
+    (package-install 'use-package)))
 
-  (when (< emacs-major-version 29)
-    (unless (package-installed-p 'use-package)
-      (unless package-archive-contents
-        (package-refresh-contents))
-      (package-install 'use-package)))
+(add-to-list 'display-buffer-alist
+             '("\\`\\*\\(Warnings\\|Compile-Log\\)\\*\\'"
+               (display-buffer-no-window)
+               (allow-no-window . t)))
 
-  (add-to-list 'display-buffer-alist
-               '("\\`\\*\\(Warnings\\|Compile-Log\\)\\*\\'"
-                 (display-buffer-no-window)
-                 (allow-no-window . t)))
+;; Quit everything
 
-  (use-package delsel
-    :ensure nil ; no need to install it as it is built-in
-    :hook (after-init . delete-selection-mode))
+(defun prot/keyboard-quit-dwim ()
+  "Do-What-I-Mean behaviour for a general `keyboard-quit'.
 
-  (defun prot/keyboard-quit-dwim ()
-    "Do-What-I-Mean behaviour for a general `keyboard-quit'.
+The generic `keyboard-quit' does not do the expected thing when
+the minibuffer is open.  Whereas we want it to close the
+minibuffer, even without explicitly focusing it.
 
-  The generic `keyboard-quit' does not do the expected thing when
-  the minibuffer is open.  Whereas we want it to close the
-  minibuffer, even without explicitly focusing it.
+The DWIM behaviour of this command is as follows:
 
-  The DWIM behaviour of this command is as follows:
+- When the region is active, disable it.
+- When a minibuffer is open, but not focused, close the minibuffer.
+- When the Completions buffer is selected, close it.
+- In every other case use the regular `keyboard-quit'."
+  (interactive)
+  (cond
+   ((region-active-p)
+    (keyboard-quit))
+   ((derived-mode-p 'completion-list-mode)
+    (delete-completion-window))
+   ((> (minibuffer-depth) 0)
+    (abort-recursive-edit))
+   (t
+    (keyboard-quit))))
 
-  - When the region is active, disable it.
-  - When a minibuffer is open, but not focused, close the minibuffer.
-  - When the Completions buffer is selected, close it.
-  - In every other case use the regular `keyboard-quit'."
-    (interactive)
-    (cond
-     ((region-active-p)
-      (keyboard-quit))
-     ((derived-mode-p 'completion-list-mode)
-      (delete-completion-window))
-     ((> (minibuffer-depth) 0)
-      (abort-recursive-edit))
-     (t
-      (keyboard-quit))))
+(define-key global-map (kbd "C-g") #'prot/keyboard-quit-dwim)
 
-  (define-key global-map (kbd "C-g") #'prot/keyboard-quit-dwim)
+(set-face-attribute 'default nil
+                    :family "3270 Nerd Font"
+                    :height 160)
+
+(set-face-attribute 'fixed-pitch nil
+                    :family "3270 Nerd Font"
+                    :height 160)
+
+(set-face-attribute 'variable-pitch nil
+                    :family "Iosevka Etoile"
+                    :height 160)
+
+;; General UI Toggles
+(menu-bar-mode -1)
+(tool-bar-mode -1)
+(scroll-bar-mode -1)
+(show-paren-mode 1)
+(add-to-list 'default-frame-alist '(undecorated . t))
 
 
-  (set-face-attribute 'default nil
-                      :family "BigBlueTerm437 Nerd Font"
-                      :height 140)
+;; Magit
+(use-package magit
+  :ensure t
+  :config
+  (setq magit-auto-revert-mode nil)
+  (setq magit-save-repository-buffers 'dontask)
+  :bind (("C-x g" . magit-status)))
 
-  (set-face-attribute 'fixed-pitch nil
-                      :family "BigBlueTerm437 Nerd Font"
-                      :height 140)
+(use-package org-roam
+  :ensure t
+  :custom
+  (org-roam-directory (file-truename "~/Notes"))
+  :bind (("C-c n l" . org-roam-buffer-toggle)
+         ("C-c n f" . org-roam-node-find)
+         ("C-c n g" . org-roam-graph)
+         ("C-c n i" . org-roam-node-insert)
+         ("C-c n c" . org-roam-capture))
+  :config
+  (require 'org-roam-protocol)
 
-  (set-face-attribute 'variable-pitch nil
-                      :family "Iosevka Etoile"
-                      :height 160)
-
-  (use-package mixed-pitch
-    :ensure t
-    :hook
-    ;; If you want it in all text modes:
-    (text-mode . mixed-pitch-mode))
-
-  (menu-bar-mode -1)
-  (tool-bar-mode -1)
-  (scroll-bar-mode -1)
-  (show-paren-mode 1)
-
-  (use-package vertico
-    :ensure t
-    :hook (after-init . vertico-mode))
-
-  (use-package marginalia
-    :ensure t
-    :hook (after-init . marginalia-mode))
-
-  (use-package orderless
-    :ensure t
-    :config
-    (setq completion-styles '(orderless basic))
-    (setq completion-category-defaults nil)
-    (setq completion-category-overrides nil))
-
-  (use-package savehist
-    :ensure nil ; it is built-in
-    :hook (after-init . savehist-mode))
-
-  (use-package corfu
-    :ensure t
-    :hook (after-init . global-corfu-mode)
-    :bind (:map corfu-map ("S-<tab>" . corfu-complete))
-    :config
-    (setq tab-always-indent 'complete)
-    (setq corfu-preview-current nil)
-    (setq corfu-min-width 20)
-
-    (setq corfu-popupinfo-delay '(1.25 . 0.5))
-    (corfu-popupinfo-mode 1) ; shows documentation after `corfu-popupinfo-delay'
-
-    ;; Sort by input history (no need to modify `corfu-sort-function').
-    (with-eval-after-load 'savehist
-      (corfu-history-mode 1)
-      (add-to-list 'savehist-additional-variables 'corfu-history)))
-
-  (use-package spacious-padding
-    :ensure nil
-    :load-path "~/.config/emacs/extras/spacious-padding"
-    :config
-    (setq spacious-padding-widths
-          '( :internal-border-width 0
-             :header-line-width 8
-             :mode-line-width 0
-             :custom-button-width 3
-             :tab-width 2
-             :right-divider-width 10
-             :scroll-bar-width 0
-             :fringe-width 4))
-
-    (spacious-padding-mode 1))
-
-  (use-package dired
-    :ensure nil
-    :commands (dired)
-    :hook
-    ((dired-mode . dired-hide-details-mode)
-     (dired-mode . hl-line-mode))
-    :config
-    (setq dired-recursive-copies 'always)
-    (setq dired-recursive-deletes 'always)
-    (setq delete-by-moving-to-trash t)
-    (setq dired-dwim-target t))
+  (org-roam-setup))
 
 
-  (use-package magit
-    :ensure t
-    :config
-    (setq magit-auto-revert-mode nil)
-    (setq magit-save-repository-buffers 'dontask)
-    :bind (("C-x g" . magit-status)))
+(use-package tao-theme
+  :ensure t
+  :config
+  (load-theme 'tao-yang t))
 
-  (use-package org-roam
-    :ensure t
-    :custom
-    (org-roam-directory (file-truename "~/Notes")) ; directory for your notes
-    :bind (("C-c n l" . org-roam-buffer-toggle)
-           ("C-c n f" . org-roam-node-find)
-           ("C-c n g" . org-roam-graph)
-           ("C-c n i" . org-roam-node-insert)
-           ("C-c n c" . org-roam-capture)
-           ;; Dailies
-           ("C-c n j" . org-roam-dailies-capture-today))
-    :config
-    (require 'org-roam-protocol)
-
-    (org-roam-setup))
+(use-package dired
+  :ensure nil
+  :commands (dired)
+  :hook
+  ((dired-mode . dired-hide-details-mode)
+   (dired-mode . hl-line-mode))
+  :config
+  (setq dired-recursive-copies 'always)
+  (setq dired-recursive-deletes 'always)
+  (setq delete-by-moving-to-trash t)
+  (setq dired-dwim-target t))
 
 
-  ;; Some Defaults
-  (set-language-environment "UTF-8")
-  (prefer-coding-system 'utf-8)
+(setq create-lockfiles nil)
 
-  (global-auto-revert-mode t)
+(modify-all-frames-parameters
+ '((right-divider-width . 12)
+   (internal-border-width . 12)))
+(dolist (face '(window-divider
+                window-divider-first-pixel
+                window-divider-last-pixel))
+  (face-spec-reset-face face)
+  (set-face-foreground face (face-attribute 'default :background)))
+(set-face-background 'fringe (face-attribute 'default :background))
 
-  (setq gc-cons-threshold 100000000)
-  (setq epg-pinentry-mode 'loopback)
+(use-package org-journal
+  :ensure t
+  :defer t
+  :init
+  ;; Change default prefix key; needs to be set before loading org-journal
+  (setq org-journal-prefix-key "C-c j ")
+  :config
+  (setq org-journal-dir "~/Notes/journal/"
+        org-journal-date-format "%A, %d %B %Y")
+  (org-journal-mode))
 
-  (use-package which-key
-    :ensure nil ;; Since Emacs 30.1 is included
-    :config
-    (which-key-mode))
+(use-package multiple-cursors
+  :ensure t
+  :config
+  (global-set-key (kbd "C-S-c C-S-c") 'mc/edit-lines)
+  (global-set-key (kbd "C->")         'mc/mark-next-like-this)
+  (global-set-key (kbd "C-<")         'mc/mark-previous-like-this)
+  (global-set-key (kbd "C-c C-<")     'mc/mark-all-like-this)
+  (global-set-key (kbd "C-\"")        'mc/skip-to-next-like-this)
+  (global-set-key (kbd "C-:")         'mc/skip-to-previous-like-this))
 
-  (add-hook 'prog-mode-hook 'display-line-numbers-mode)
-  (setq display-line-numbers 'relative)
+;;; tramp
+;;; http://stackoverflow.com/questions/13794433/how-to-disable-autosave-for-tramp-buffers-in-emacs
+(setq tramp-auto-save-directory "/tmp")
 
-  (global-hl-line-mode 1)  ;; highlight current line -- see hl-line.el
+;; Confortable buffers
+(keymap-global-set "C-c b" 'ibuffer)
 
-  (electric-indent-mode 1)
-  (add-hook 'after-change-major-mode-hook (lambda() (electric-indent-mode 1)))
+;; Recent Files
+(recentf-mode 1)
+(keymap-global-set "C-c r" 'recentf)
 
-  (setq electric-indent-inhibit t)
-  (setq-default indent-tabs-mode nil)
+;; Complete
 
-  (add-hook 'before-save-hook 'unix-newline)
-  (add-hook 'before-save-hook 'delete-trailing-whitespace)
+(use-package vertico
+  :ensure t
+  :hook (after-init . vertico-mode))
 
+(use-package marginalia
+  :ensure t
+  :hook (after-init . marginalia-mode))
 
-  (setq create-lockfiles nil
-        make-backup-files nil)
+(use-package orderless
+  :ensure t
+  :config
+  (setq completion-styles '(orderless basic))
+  (setq completion-category-defaults nil)
+  (setq completion-category-overrides nil))
 
-  ;; Add frame borders and window dividers
-  (modify-all-frames-parameters
-   '((right-divider-width . 24)
-     (internal-border-width . 24)))
-  (dolist (face '(window-divider
-                  window-divider-first-pixel
-                  window-divider-last-pixel))
-    (face-spec-reset-face face)
-    (set-face-foreground face (face-attribute 'default :background)))
-  (set-face-background 'fringe (face-attribute 'default :background))
+(use-package savehist
+  :ensure nil ; it is built-in
+  :hook (after-init . savehist-mode))
 
-  (use-package org-modern
-    :ensure nil
-    :load-path "/home/ssalva/.config/emacs/extras/org-modern"
-    :config
-    (setq
-     ;; Edit settings
-     org-auto-align-tags nil
-     org-tags-column 0
-     org-catch-invisible-edits 'show-and-error
-     org-special-ctrl-a/e t
-     org-insert-heading-respect-content t
-     org-modern-star nil
-     ;; Org styling, hide markup etc.
-     org-hide-emphasis-markers t
-     org-pretty-entities t
-     org-agenda-tags-column 0
-     org-ellipsis "…")
+(use-package corfu
+  :ensure t
+  :hook (after-init . global-corfu-mode)
+  :bind (:map corfu-map ("C-," . corfu-complete))
+  :config
+  (setq tab-always-indent 'complete)
+  (setq corfu-preview-current nil)
+  (setq corfu-min-width 20)
 
-    (global-org-modern-mode)
-    )
+  (setq corfu-popupinfo-delay '(1.25 . 0.5))
+  (corfu-popupinfo-mode 1) ; shows documentation after `corfu-popupinfo-delay'
 
+  ;; Sort by input history (no need to modify `corfu-sort-function').
+  (with-eval-after-load 'savehist
+    (corfu-history-mode 1)
+    (add-to-list 'savehist-additional-variables 'corfu-history)))
 
-  (use-package borland-blue-theme
-    :ensure nil
-    :load-path "/home/ssalva/.config/emacs/extras/borland-blue"
-    :config
-    (load-theme 'borland-blue t)
-    (set-face-background hl-line-face "#2020d4")
-    )
-
-  (blink-cursor-mode 0)
-
-  (use-package doom-modeline
-    :ensure t
-    :init
-    (doom-modeline-mode 1)
-    :config
-    (setq doom-modeline-total-line-number t)
-    (setq doom-modeline-height 1) ; optional
-    (custom-set-faces
-     '(doom-modeline ((t (:family "Iosevka Etoile" :height 0.95 :foreground "#FFFF4D"))))
-     '(mode-line-highlight ((t (:family "Iosevka Etoile" :height 0.95 :foreground "#FFFF4D"))))
-     '(mode-line-emphasis ((t (:family "Iosevka Etoile" :height 0.95 :foreground "#FFFF4D"))))
-     '(mode-line ((t (:family "Iosevka Etoile" :height 0.95 :foreground "#FFFF4D"))))
-     '(mode-line-active ((t (:family "Iosevka Etoile" :height 0.95 :foreground "#FFFF4D" :background "#0000a3")))) ; For 29+
-     '(mode-line-inactive ((t (:family "Iosevka Etoile" :height 0.95 :foreground "#a3a3a3" :background "#0000a3"))))))
-
-  (use-package org-journal
-    :ensure t
-    :defer t
-    :init
-    ;; Change default prefix key; needs to be set before loading org-journal
-    (setq org-journal-prefix-key "C-c j ")
-    :config
-    (setq org-journal-dir "~/Notes/journal/"
-          org-journal-date-format "%A, %d %B %Y")
-    (org-journal-mode))
-
-  (use-package multiple-cursors
-    :ensure t
-    :config
-    (global-set-key (kbd "C-S-c C-S-c") 'mc/edit-lines)
-    (global-set-key (kbd "C->")         'mc/mark-next-like-this)
-    (global-set-key (kbd "C-<")         'mc/mark-previous-like-this)
-    (global-set-key (kbd "C-c C-<")     'mc/mark-all-like-this)
-    (global-set-key (kbd "C-\"")        'mc/skip-to-next-like-this)
-    (global-set-key (kbd "C-:")         'mc/skip-to-previous-like-this))
-
-  ;;; tramp
-  ;;; http://stackoverflow.com/questions/13794433/how-to-disable-autosave-for-tramp-buffers-in-emacs
-  (setq tramp-auto-save-directory "/tmp")
+(use-package nyan-mode
+  :ensure t
+  :config
+  (nyan-mode))
 #+end_src
 
 *** Gammastep
@@ -578,29 +585,107 @@ unbind %
 # Probably not needed but rather safe than sorry
 set -g default-terminal "screen-256color"
 set -ag terminal-overrides ",xterm-256color:Tc"
-
-BACKGROUND="#0000a3"
-set -g @BACKGROUND $BACKGROUND
-set -g @LGRAY "#45475a"
-
-# Window title should be set to the tmux session name
-set-option -g set-titles on
-set-option -g set-titles-string "#S"
-
-# Statusbar settings
-set -g status-position top
-set -g status-bg "$BACKGROUND"
-set -g status-fg white
-set -g status-left '#[bg=#{@BACKGROUND}]#[fg=magenta]#S #[fg=#{@LGRAY}]|'
-set -g status-right ''
-set -g status 2
-set -g 'status-format[1]' ''
-
-
-
-setw -g window-status-separator ""
-
-
-# COLORS
-set -g pane-active-border-style "bg=#{@BACKGROUND} fg=yellow"
 #+END_SRC
+
+*** Waybar
+#+begin_src elisp :mkdirp yes :tangle configs/waybar/config
+// ~/.config/waybar/config
+{
+    "layer":  "top",
+    "position": "top",
+    "height": 32,
+    "spacing": 0,
+
+    "modules-left": ["custom/spacer", "custom/intro", "custom/spacer", "river/tags"],
+    "modules-center": [],
+    "modules-right": ["cpu", "memory", "battery", "clock"],
+
+    "custom/spacer": { "format": " " },
+
+    "custom/intro": {
+       "format": "  "
+    },
+
+    "river/tags": {
+        "num-tags": 6,
+        "tag-labels": ["👽", "📡", "🖥️", "✉️", "📁", "🎵"]
+    },
+
+    "cpu": {
+        "format": "CPU {usage}%",
+        "interval": 5
+    },
+
+    "memory": {
+        "format": "| MEM {percentage}%",
+        "interval": 10
+    },
+
+    "battery": {
+        "format": "| BAT {capacity}%",
+        "interval":  30
+    },
+
+    "clock": {
+        "format": "| TIME {:%H:%M}",
+        "tooltip-format": "{:%Y-%m-%d | %A}"
+    }
+}
+#+end_src
+
+#+begin_src css :mkdirp yes :tangle configs/waybar/style.css
+*{
+    font-family: "iMWritingDuo Nerd Font", "IBM Plex Serif", "BlexMono Nerd Font", monospace;
+    font-size: 13pt;
+    margin: 0;
+    padding: 0;
+}
+
+#custom-intro {
+    font-size: 14pt;
+    background-image: url('/home/ssalva/Pictures/Wallpapers/Gentoo.svg');
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+}
+
+window#waybar {
+    background: #111;
+}
+
+#tags button {
+    padding: 0 8px;
+    background: transparent;
+    color: #8da0b0;
+    border: none;
+    border-radius: 0;
+}
+
+#tags button.focused {
+    color: #64d0f0;
+    background: #F1F1F1;
+}
+
+#tags button.urgent {
+    background: #ff8095;
+}
+
+#cpu, #memory, #battery, #clock {
+    padding: 0 6px;
+    color: #f1f1f1;
+}
+
+#battery.charging {
+    color: #2fc584;
+}
+
+#battery.warning {
+    color: #e0b060;
+}
+
+#clock {
+    color: #f1f1f1;
+    padding-right: 8px;
+}
+#+end_src
+

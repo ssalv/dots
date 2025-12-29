@@ -1,0 +1,42 @@
+// ~/.config/waybar/config
+{
+    "layer":  "top",
+    "position": "top",
+    "height": 32,
+    "spacing": 0,
+
+    "modules-left": ["custom/spacer", "custom/intro", "custom/spacer", "river/tags"],
+    "modules-center": [],
+    "modules-right": ["cpu", "memory", "battery", "clock"],
+
+    "custom/spacer": { "format": " " },
+
+    "custom/intro": {
+       "format": "  "
+    },
+
+    "river/tags": {
+        "num-tags": 6,
+        "tag-labels": ["👽", "📡", "🖥️", "✉️", "📁", "🎵"]
+    },
+
+    "cpu": {
+        "format": "CPU {usage}%",
+        "interval": 5
+    },
+
+    "memory": {
+        "format": "| MEM {percentage}%",
+        "interval": 10
+    },
+
+    "battery": {
+        "format": "| BAT {capacity}%",
+        "interval":  30
+    },
+
+    "clock": {
+        "format": "| TIME {:%H:%M}",
+        "tooltip-format": "{:%Y-%m-%d | %A}"
+    }
+}

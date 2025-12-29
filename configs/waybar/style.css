@@ -1,0 +1,53 @@
+*{
+    font-family: "iMWritingDuo Nerd Font", "IBM Plex Serif", "BlexMono Nerd Font", monospace;
+    font-size: 13pt;
+    margin: 0;
+    padding: 0;
+}
+
+#custom-intro {
+    font-size: 14pt;
+    background-image: url('/home/ssalva/Pictures/Wallpapers/Gentoo.svg');
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+}
+
+window#waybar {
+    background: #111;
+}
+
+#tags button {
+    padding: 0 8px;
+    background: transparent;
+    color: #8da0b0;
+    border: none;
+    border-radius: 0;
+}
+
+#tags button.focused {
+    color: #64d0f0;
+    background: #F1F1F1;
+}
+
+#tags button.urgent {
+    background: #ff8095;
+}
+
+#cpu, #memory, #battery, #clock {
+    padding: 0 6px;
+    color: #f1f1f1;
+}
+
+#battery.charging {
+    color: #2fc584;
+}
+
+#battery.warning {
+    color: #e0b060;
+}
+
+#clock {
+    color: #f1f1f1;
+    padding-right: 8px;
+}
