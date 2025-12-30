@@ -33,7 +33,7 @@ I use this configuration in many macchines, which are:
 - Ceres: Thinkpad X395 (Personal Laptop)
 - Luna: Thinkpad T14 (Work Machine)
 
-   [[file:./screenshots/linux_desktop_secure.png]]
+   [[file:./assets/linux_desktop_secure.png]]
 
 ** KISS
 That's my own points, Keep It Simple St.
