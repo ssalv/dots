@@ -1,0 +1,44 @@
+window {
+    background-color: #0B0B0B;
+    color: #D8D8D8;
+    border-radius: 0; /* sharp, CRT-ish */
+    padding: 4px;
+    font-family: "Iosevka", "BlexMono Nerd Font", "Terminus", monospace;
+    font-size: 18px;
+}
+
+#input {
+    margin: 4px;
+    padding: 4px 6px;
+    border: 1px solid #f1f1f1;
+    background-color: #111111;
+    color: #f1f1f1;
+}
+
+#inner-box {
+    margin: 4px;
+    padding: 4px 0;
+}
+
+#outer-box {
+    margin: 0;
+    padding: 0;
+}
+
+#scroll {
+    margin: 0;
+    padding: 0;
+}
+
+#entry {
+    padding: 2px 6px;
+}
+
+#entry:selected {
+    background-color: #000;
+    color: #FFF;
+}
+
+#text {
+    color: #D8D8D8;
+}

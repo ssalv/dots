@@ -12,7 +12,7 @@
     "custom/spacer": { "format": " " },
 
     "custom/intro": {
-       "format": "  "
+       "format": "        "
     },
 
     "river/tags": {

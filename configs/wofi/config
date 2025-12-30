@@ -1,0 +1,15 @@
+allow_images=false
+allow_markup=false
+anchor=end
+width=752
+height=390
+columns=1
+show=drun
+term=foot
+hide_scroll=true
+layer=top
+orientation=vertical
+matching=fuzzy
+insensitive=true
+dynamic_lines=true
+no_actions=true

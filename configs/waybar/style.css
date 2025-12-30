@@ -1,5 +1,5 @@
 *{
-    font-family: "iMWritingDuo Nerd Font", "IBM Plex Serif", "BlexMono Nerd Font", monospace;
+    font-family: "Iosevka Etoile", "IBM Plex Serif", "BlexMono Nerd Font", monospace;
     font-size: 13pt;
     margin: 0;
     padding: 0;
@@ -7,14 +7,14 @@
 
 #custom-intro {
     font-size: 14pt;
-    background-image: url('/home/ssalva/Pictures/Wallpapers/Gentoo.svg');
+    background-image: url('/home/ssalva/Pictures/Wallpapers/suse.svg');
     background-position: center;
     background-repeat: no-repeat;
     background-size: contain;
 }
 
 window#waybar {
-    background: #111;
+    background: #313131;
 }
 
 #tags button {
@@ -27,7 +27,7 @@ window#waybar {
 
 #tags button.focused {
     color: #64d0f0;
-    background: #F1F1F1;
+    background: #171717;
 }
 
 #tags button.urgent {
