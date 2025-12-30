@@ -32,9 +32,18 @@ I use this configuration in many macchines, which are:
 - Ceres: Thinkpad X395 (Personal Laptop)
 - Luna: Thinkpad T14 (Work Machine)
 
-*** Meme
-
 [[file:./assets/linux_desktop_secure.png]]
+
+** Screenshots
+
+[[./screenshots/1.png]]
+
+[[./screenshots/2.png]]
+
+[[./screenshots/3.png]]
+
+[[./screenshots/4.png]]
+
 
 ** KISS
 That's my own points, Keep It Simple St.
