@@ -1,6 +1,6 @@
-*{
-    font-family: "Iosevka Etoile", "IBM Plex Serif", "BlexMono Nerd Font", monospace;
-    font-size: 13pt;
+* {
+    font-family: "Tamzen", monospace;
+    font-size: 12pt;
     margin: 0;
     padding: 0;
 }
@@ -14,10 +14,11 @@
 }
 
 window#waybar {
-    background: #313131;
+    border: 4px solid #2f2f2f;
+    background: #262626;
 }
 
-#tags button {
+#workspaces button {
     padding: 0 8px;
     background: transparent;
     color: #8da0b0;
@@ -25,12 +26,17 @@ window#waybar {
     border-radius: 0;
 }
 
-#tags button.focused {
+#workspaces button.focused {
     color: #64d0f0;
     background: #171717;
 }
 
-#tags button.urgent {
+#mode {
+    color: #64d0f0;
+    font-size: 10pt;
+}
+
+#workspaces button.urgent {
     background: #ff8095;
 }
 
