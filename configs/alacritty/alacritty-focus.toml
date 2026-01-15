@@ -1,0 +1,37 @@
+[general]
+ipc_socket = false
+
+[window]
+padding = { x = 32, y = 32 }
+decorations = "None"
+
+[font]
+# https://github.com/oppiliappan/scientifica
+# normal = { family = "Tamzen", style = "Medium" }
+normal = { family = "knxt", style = "Regular" }
+
+size = 15.0
+
+[colors.bright]
+black = "0x4F4F4F"
+blue = "0x7CB0B3"
+cyan = "0xB3FFFF"
+green = "0x8FB28F"
+magenta = "0xFCACE3"
+red = "0xDCA3A3"
+white = "0xFFFFEF"
+yellow = "0xE0CF9F"
+
+[colors.normal]
+black = "0x262626"
+blue = "0x6CA0A3"
+cyan = "0x93E0E3"
+green = "0x7F9F7F"
+magenta = "0xDC8CC3"
+red = "0xCC9393"
+white = "0xDCDCCC"
+yellow = "0xD0BF8F"
+
+[colors.primary]
+background = "0x000000"
+foreground = "0xDCDCCC"
