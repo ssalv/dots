@@ -4,9 +4,17 @@
 (load custom-file :no-error-if-file-is-missing)
 
 (require 'package)
-(package-initialize)
+(setq package-archives
+      '(("GNU ELPA"     . "https://elpa.gnu.org/packages/")
+	("MELPA Stable" . "https://stable.melpa.org/packages/")
+	("MELPA"        . "https://melpa.org/packages/"))
+      package-archive-priorities
+      '(("MELPA" . 10)
+	("GNU ELPA"     . 5)
+	("MELPA Stable"        . 0)))
 
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
+
+(package-initialize)
 
 (when (< emacs-major-version 29)
   (unless (package-installed-p 'use-package)
@@ -27,12 +35,8 @@
 (when (native-comp-available-p)
   (setq native-comp-async-report-warnings-errors 'silent))
 
-(setq initial-buffer-choice (lambda ()
-    (org-agenda-list 1)
-    (get-buffer "*Org Agenda*")))
-
-;;  (add-to-list 'default-frame-alist
-;;               '(font . "Tamzen-14"))
+(setq-default line-spacing 0.1)
+(visual-line-mode)
 
 (defun prot/keyboard-quit-dwim ()
   "Do-What-I-Mean behaviour for a general `keyboard-quit'.
@@ -60,6 +64,13 @@ The DWIM behaviour of this command is as follows:
 
 (define-key global-map (kbd "C-g") #'prot/keyboard-quit-dwim)
 
+;; Confortable buffers
+(keymap-global-set "C-c b" 'ibuffer)
+
+;; Recent Files
+(recentf-mode 1)
+(keymap-global-set "C-c r" 'recentf)
+
 ;; Magit
 (use-package magit
   :ensure t
@@ -68,8 +79,15 @@ The DWIM behaviour of this command is as follows:
   (setq magit-save-repository-buffers 'dontask)
   :bind (("C-x g" . magit-status)))
 
-;;; http://stackoverflow.com/questions/13794433/how-to-disable-autosave-for-tramp-buffers-in-emacs
-(setq tramp-auto-save-directory "/tmp")
+;; http://stackoverflow.com/questions/13794433/how-to-disable-autosave-for-tramp-buffers-in-emacs
+(with-eval-after-load 'tramp
+  (setq tramp-auto-save-directory "/tmp")
+  (setq read-process-output-max (* 1024 1024)) ;; 1mb
+  (setq remote-file-name-inhibit-cache nil)
+  (setq remote-file-name-inhibit-locks t)
+  (setq tramp-verbose 1)
+  (add-to-list 'tramp-remote-path 'tramp-own-remote-path)
+  (setq tramp-direct-async-process t))
 
 (use-package dired
   :ensure nil
@@ -102,118 +120,106 @@ The DWIM behaviour of this command is as follows:
   :ensure nil ; it is built-in
   :hook (after-init . savehist-mode))
 
-(use-package tao-theme
+(use-package org-modern
   :ensure t
   :config
-  (load-theme 'tao-yang t))
+  (setq org-modern-hide-stars nil)
+  (org-pretty-entities nil)
 
-(use-package treemacs
+  (add-hook 'org-mode-hook #'org-modern-mode)
+  (add-hook 'org-agenda-finalize-hook #'org-modern-agenda))
+
+(setq org-startup-indented t)
+
+(use-package org-roam
   :ensure t
-  :defer t
-  :init
-  (with-eval-after-load 'winum
-    (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
+  :custom
+  (org-roam-directory (file-truename "~/Notes/roam"))
+  (org-roam-completion-everywhere t)
+  (org-roam-dailies-capture-templates
+   '(("d" "default" entry "* %<%I:%M %p>: %?"
+      :if-new (file+head "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d>\n"))))
+  :bind (("C-c n l" . org-roam-buffer-toggle)
+	 ("C-c n f" . org-roam-node-find)
+	 ("C-c n i" . org-roam-node-insert)
+	 :map org-mode-map
+	 ("C-M-i" . completion-at-point)
+	 :map org-roam-dailies-map
+	 ("Y" . org-roam-dailies-capture-yesterday)
+	 ("T" . org-roam-dailies-capture-tomorrow))
   :config
-  (progn
-    (setq treemacs-buffer-name-function            #'treemacs-default-buffer-name
-          treemacs-buffer-name-prefix              " *Treemacs-Buffer-"
-          treemacs-collapse-dirs                   (if treemacs-python-executable 3 0)
-          treemacs-deferred-git-apply-delay        0.5
-          treemacs-directory-name-transformer      #'identity
-          treemacs-display-in-side-window          t
-          treemacs-eldoc-display                   'simple
-          treemacs-file-event-delay                2000
-          treemacs-file-extension-regex            treemacs-last-period-regex-value
-          treemacs-file-follow-delay               0.2
-          treemacs-file-name-transformer           #'identity
-          treemacs-follow-after-init               t
-          treemacs-expand-after-init               t
-          treemacs-find-workspace-method           'find-for-file-or-pick-first
-          treemacs-git-command-pipe                ""
-          treemacs-goto-tag-strategy               'refetch-index
-          treemacs-header-scroll-indicators        '(nil . "^^^^^^")
-          treemacs-hide-dot-git-directory          t
-          treemacs-hide-dot-jj-directory           t
-          treemacs-indentation                     2
-          treemacs-indentation-string              " "
-          treemacs-is-never-other-window           nil
-          treemacs-max-git-entries                 5000
-          treemacs-missing-project-action          'ask
-          treemacs-move-files-by-mouse-dragging    t
-          treemacs-move-forward-on-expand          nil
-          treemacs-no-png-images                   nil
-          treemacs-no-delete-other-windows         t
-          treemacs-project-follow-cleanup          nil
-          treemacs-persist-file                    (expand-file-name ".cache/treemacs-persist" user-emacs-directory)
-          treemacs-position                        'left
-          treemacs-read-string-input               'from-child-frame
-          treemacs-recenter-distance               0.1
-          treemacs-recenter-after-file-follow      nil
-          treemacs-recenter-after-tag-follow       nil
-          treemacs-recenter-after-project-jump     'always
-          treemacs-recenter-after-project-expand   'on-distance
-          treemacs-litter-directories              '("/node_modules" "/.venv" "/.cask")
-          treemacs-project-follow-into-home        nil
-          treemacs-show-cursor                     nil
-          treemacs-show-hidden-files               nil
-          treemacs-silent-filewatch                nil
-          treemacs-silent-refresh                  nil
-          treemacs-sorting                         'alphabetic-asc
-          treemacs-select-when-already-in-treemacs 'move-back
-          treemacs-space-between-root-nodes        t
-          treemacs-tag-follow-cleanup              t
-          treemacs-tag-follow-delay                1.5
-          treemacs-text-scale                      nil
-          treemacs-user-mode-line-format           nil
-          treemacs-user-header-line-format         nil
-          treemacs-wide-toggle-width               70
-          treemacs-width                           35
-          treemacs-width-increment                 1
-          treemacs-width-is-initially-locked       t
-          treemacs-workspace-switch-cleanup        nil)
+  (org-roam-setup)
+  
+  (require 'org-roam-protocol)
+  (require 'org-roam-dailies) ;; Ensure the keymap is available
 
-    ;; The default width and height of the icons is 22 pixels. If you are
-    ;; using a Hi-DPI display, uncomment this to double the icon size.
-    ;;(treemacs-resize-icons 44)
+  (org-roam-db-autosync-mode))
 
-    (treemacs-follow-mode t)
-    (treemacs-filewatch-mode t)
-    (treemacs-fringe-indicator-mode 'always)
-    (when treemacs-python-executable
-      (treemacs-git-commit-diff-mode t))
+(setq org-return-follows-link t)
 
-    (pcase (cons (not (null (executable-find "git")))
-                 (not (null treemacs-python-executable)))
-      (`(t . t)
-       (treemacs-git-mode 'deferred))
-      (`(t . _)
-       (treemacs-git-mode 'simple)))
+(add-to-list 'load-path "~/.emacs.d/packages/nano-emacs")
+(require 'nano-layout)
 
-    (treemacs-hide-gitignored-files-mode nil))
-  :bind
-  (:map global-map
-        ("M-0"       . treemacs-select-window)
-        ("C-x t 1"   . treemacs-delete-other-windows)
-        ("C-x t t"   . treemacs)
-        ("C-x t d"   . treemacs-select-directory)
-        ("C-x t B"   . treemacs-bookmark)
-        ("C-x t C-t" . treemacs-find-file)
-        ("C-x t M-t" . treemacs-find-tag)))
 
-(use-package treemacs-icons-dired
-  :hook (dired-mode . treemacs-icons-dired-enable-once)
-  :ensure t)
 
-(use-package treemacs-magit
-  :after (treemacs magit)
-  :ensure t)
+(setq nano-font-family-monospaced "Iosevka Term Curly")
+(setq nano-font-family-proportional "Iosevka Etoile")
+(setq nano-font-size 14)
 
-(use-package treemacs-tab-bar ;;treemacs-tab-bar if you use tab-bar-mode
-  :after (treemacs)
-  :ensure t
-  :config (treemacs-set-scope-type 'Tabs))
+;; Theme
+(require 'nano-faces)
+(require 'nano-theme)
+(require 'nano-theme-dark)
+(require 'nano-theme-light)
 
-(treemacs-start-on-boot)
+
+;; Theming Command line options (this will cancel warning messages)
+(add-to-list 'command-switch-alist '("-dark"   . (lambda (args))))
+(add-to-list 'command-switch-alist '("-light"  . (lambda (args))))
+(add-to-list 'command-switch-alist '("-default"  . (lambda (args))))
+(add-to-list 'command-switch-alist '("-no-splash" . (lambda (args))))
+(add-to-list 'command-switch-alist '("-no-help" . (lambda (args))))
+(add-to-list 'command-switch-alist '("-compact" . (lambda (args))))
+(cond
+ ((member "-default" command-line-args) t)
+ ((member "-dark" command-line-args) (nano-theme-set-dark))
+ (t (nano-theme-set-light)))
+(call-interactively 'nano-refresh-theme)
+
+(with-eval-after-load 'org
+  (defun my/style-org-header-sizes ()
+    (interactive)
+    "Set custom heights for org-level faces to work with nano-emacs."
+    (let ((levels '(1.5 1.3 1.15 1.05))) ; Heights: 150%, 130%, 115%, 105%
+      (dotimes (i (length levels))
+        (let ((face (intern (format "org-level-%d" (1+ i))))
+              (size (nth i levels)))
+          (set-face-attribute face nil :height size :weight 'bold)))))
+
+  ;; Apply the sizes
+  (my/style-org-header-sizes))
+(set-face-attribute 'org-level-1 nil 
+                    :height 1.6 
+                    :weight 'bold
+                    :overline t)
+
+;; Nano default settings (optional)
+(require 'nano-defaults)
+
+;; Nano session saving (optional)
+(require 'nano-session)
+
+;; Nano header & mode lines (optional)
+(require 'nano-modeline)
+
+;; Splash (optional)
+(unless (member "-no-splash" command-line-args)
+  (require 'nano-splash))
+
+(menu-bar-mode -1)
+(tool-bar-mode -1)
+(scroll-bar-mode -1)
+(which-key-mode 1)
 
 (use-package spacious-padding
   :ensure nil
