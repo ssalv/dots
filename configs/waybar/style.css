@@ -1,5 +1,5 @@
 * {
-    font-family: "Tamzen", monospace;
+    font-family: "SpaceMono Nerd Font", monospace;
     font-size: 12pt;
     margin: 0;
     padding: 0;
@@ -14,43 +14,50 @@
 }
 
 window#waybar {
-    border: 4px solid #2f2f2f;
+    border-bottom: 4px solid #AFAF87; 
     background: #262626;
 }
 
 #workspaces button {
     padding: 0 8px;
     background: transparent;
-    color: #8da0b0;
+    color: #7c7c7c;
     border: none;
     border-radius: 0;
 }
 
 #workspaces button.focused {
-    color: #64d0f0;
+    color: #D9967D;
     background: #171717;
 }
 
 #mode {
-    color: #64d0f0;
+    color: #98C379;
     font-size: 10pt;
+    font-weight: bold;
 }
 
 #workspaces button.urgent {
-    background: #ff8095;
+    background: #98C379;
+    color: #262626;
 }
 
 #cpu, #memory, #battery, #clock {
     padding: 0 6px;
-    color: #f1f1f1;
+    color: #b9b9b9;
 }
 
 #battery.charging {
-    color: #2fc584;
+    color: #98C379;
 }
 
 #battery.warning {
-    color: #e0b060;
+    color: #D9967D;
+    animation-name: blink;
+    animation-duration: 0.5s;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
 }
 
 #clock {

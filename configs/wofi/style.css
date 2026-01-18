@@ -1,44 +1,30 @@
+* {
+    font-family: "Space Mono", monospace; /* The new font */
+    font-size: 14pt;
+    font-weight: bold;
+}
+
 window {
-    background-color: #0B0B0B;
-    color: #D8D8D8;
-    border-radius: 0; /* sharp, CRT-ish */
-    padding: 4px;
-    font-family: "Iosevka", "BlexMono Nerd Font", "Terminus", monospace;
-    font-size: 18px;
+    background-color: rgba(38, 38, 38, 0.95); /* #262626 with transparency */
+    color: #b9b9b9;
+    border: 2px solid #98C379; /* Abduction Green border */
+    border-radius: 0px; /* Keep it boxy/techy */
 }
 
 #input {
-    margin: 4px;
-    padding: 4px 6px;
-    border: 1px solid #f1f1f1;
-    background-color: #111111;
-    color: #f1f1f1;
-}
-
-#inner-box {
-    margin: 4px;
-    padding: 4px 0;
-}
-
-#outer-box {
-    margin: 0;
-    padding: 0;
-}
-
-#scroll {
-    margin: 0;
-    padding: 0;
+    background-color: #1a1a1a;
+    color: #D9967D; /* Typing in Sunset Orange */
+    border: none;
+    border-bottom: 2px solid #585858;
+    padding: 8px 12px;
+    margin: 10px;
 }
 
 #entry {
-    padding: 2px 6px;
+    padding: 10px;
 }
 
-#entry:selected {
-    background-color: #000;
-    color: #FFF;
-}
-
-#text {
-    color: #D8D8D8;
+#entry.selected {
+    background-color: #98C379; /* Green highlight */
+    color: #1a1a1a; /* Dark text on green background */
 }

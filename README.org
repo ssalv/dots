@@ -88,300 +88,76 @@ XDG_TEMPLATES_DIR="$HOME/Misc"
 #+BEGIN_SRC toml :mkdirp yes :tangle configs/foot/foot.ini
   [main]
   workers=14
-  font=Iosevka Term Curly:size=14
+  font=SpaceMono Nerd Font:size=13
   pad=16x16 center
-  # Scheme name: Grayscale Dark
-  # Scheme author: Alexandre Gavioli (https://github.com/Alexx2/)
-  # Template author: Tinted Theming (https://github.com/tinted-theming)
+
+  [cursor]
+  style=beam
+
 
   [colors]
+  cursor=262626 98C379 
   foreground=b9b9b9
   background=262626
-  regular0=262626 # black
-  regular1=7c7c7c # red
-  regular2=8e8e8e # green
-  regular3=a0a0a0 # yellow
-  regular4=686868 # blue
-  regular5=747474 # magenta
-  regular6=868686 # cyan
-  regular7=e3e3e3 # white
-  bright0=464646 # bright black
-  bright1=7c7c7c # bright red
-  bright2=8e8e8e # bright green
-  bright3=a0a0a0 # bright yellow
-  bright4=686868 # bright blue
-  bright5=747474 # bright magenta
-  bright6=868686 # bright cyan
-  bright7=f7f7f7 # bright white
-  16=999999
-  17=5e5e5e
-  18=252525
-  19=464646
-  20=ababab
-  21=e3e3e3
+
+  regular1=D9967D 
+  regular2=98C379 
+  regular3=AFAF87 
+
+  regular0=262626
+  regular4=686868
+  regular5=747474
+  regular6=868686
+  regular7=e3e3e3
+
+  bright0=464646
+  bright1=D9967D
+  bright2=98C379
+  bright3=AFAF87
+  bright4=686868
+  bright5=747474
+  bright6=868686
+  bright7=f7f7f7
 #+END_SRC
 
 #+BEGIN_SRC toml :mkdirp yes :tangle configs/foot/foot-focus.ini
   [main]
   workers=14
-  font=Iosevka Term Curly:size=14
+  font=SpaceMono Nerd Font:size=13
   pad=16x16 center
-  # Scheme name: Grayscale Dark
-  # Scheme author: Alexandre Gavioli (https://github.com/Alexx2/)
-  # Template author: Tinted Theming (https://github.com/tinted-theming)
+    
+  [cursor]
+  style=beam
 
   [colors]
+  cursor=262626 98C379
   foreground=b9b9b9
   background=000000
-  regular0=000000 # black
-  regular1=7c7c7c # red
-  regular2=8e8e8e # green
-  regular3=a0a0a0 # yellow
-  regular4=686868 # blue
-  regular5=747474 # magenta
-  regular6=868686 # cyan
-  regular7=e3e3e3 # white
-  bright0=464646 # bright black
-  bright1=7c7c7c # bright red
-  bright2=8e8e8e # bright green
-  bright3=a0a0a0 # bright yellow
-  bright4=686868 # bright blue
-  bright5=747474 # bright magenta
-  bright6=868686 # bright cyan
-  bright7=f7f7f7 # bright white
-  16=999999
-  17=5e5e5e
-  18=252525
-  19=464646
-  20=ababab
-  21=e3e3e3
+
+  regular1=D9967D
+  regular2=98C379
+  regular3=AFAF87
+
+
+  regular0=000000
+  regular4=686868
+  regular5=747474
+  regular6=868686
+  regular7=e3e3e3
+
+  bright0=464646
+  bright1=D9967D
+  bright2=98C379
+  bright3=AFAF87
+  bright4=686868
+  bright5=747474
+  bright6=868686
+  bright7=f7f7f7
 #+END_SRC
 
 #+begin_src bash
   mkdir -p ~/.config/foot
   stow -v -R -t ~/.config/foot foot
-#+end_src
-
-*** Emacs
-
-#+begin_src
-  ;; Set the custom loader file
-(setq custom-file (locate-user-emacs-file "custom.el"))
-(load custom-file :no-error-if-file-is-missing)
-
-(require 'package)
-(package-initialize)
-
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
-
-(when (< emacs-major-version 29)
-  (unless (package-installed-p 'use-package)
-    (unless package-archive-contents
-      (package-refresh-contents))
-    (package-install 'use-package)))
-
-(add-to-list 'display-buffer-alist
-             '("\\`\\*\\(Warnings\\|Compile-Log\\)\\*\\'"
-               (display-buffer-no-window)
-               (allow-no-window . t)))
-
-;; Quit everything
-
-(defun prot/keyboard-quit-dwim ()
-  "Do-What-I-Mean behaviour for a general `keyboard-quit'.
-
-The generic `keyboard-quit' does not do the expected thing when
-the minibuffer is open.  Whereas we want it to close the
-minibuffer, even without explicitly focusing it.
-
-The DWIM behaviour of this command is as follows:
-
-- When the region is active, disable it.
-- When a minibuffer is open, but not focused, close the minibuffer.
-- When the Completions buffer is selected, close it.
-- In every other case use the regular `keyboard-quit'."
-  (interactive)
-  (cond
-   ((region-active-p)
-    (keyboard-quit))
-   ((derived-mode-p 'completion-list-mode)
-    (delete-completion-window))
-   ((> (minibuffer-depth) 0)
-    (abort-recursive-edit))
-   (t
-    (keyboard-quit))))
-
-(define-key global-map (kbd "C-g") #'prot/keyboard-quit-dwim)
-
-(set-face-attribute 'default nil
-                    :family "Iosevka"
-                    :height 140)
-
-(set-face-attribute 'fixed-pitch nil
-                    :family "Iosevka"
-                    :height 140)
-
-(set-face-attribute 'variable-pitch nil
-                    :family "Iosevka Etoile"
-                    :height 140)
-
-;; General UI Toggles
-(menu-bar-mode -1)
-(tool-bar-mode -1)
-(scroll-bar-mode -1)
-(show-paren-mode 1)
-(add-to-list 'default-frame-alist '(undecorated . t))
-
-
-;; Magit
-(use-package magit
-  :ensure t
-  :config
-  (setq magit-auto-revert-mode nil)
-  (setq magit-save-repository-buffers 'dontask)
-  :bind (("C-x g" . magit-status)))
-
-(use-package org-roam
-  :ensure t
-  :custom
-  (org-roam-directory (file-truename "~/Notes"))
-  :bind (("C-c n l" . org-roam-buffer-toggle)
-         ("C-c n f" . org-roam-node-find)
-         ("C-c n g" . org-roam-graph)
-         ("C-c n i" . org-roam-node-insert)
-         ("C-c n c" . org-roam-capture))
-  :config
-  (require 'org-roam-protocol)
-
-  (org-roam-setup))
-
-
-(use-package tao-theme
-  :ensure t
-  :config
-  (load-theme 'tao-yin t))
-
-(use-package dired
-  :ensure nil
-  :commands (dired)
-  :hook
-  ((dired-mode . dired-hide-details-mode)
-   (dired-mode . hl-line-mode))
-  :config
-  (setq dired-recursive-copies 'always)
-  (setq dired-recursive-deletes 'always)
-  (setq delete-by-moving-to-trash t)
-  (setq dired-dwim-target t))
-
-
-(setq create-lockfiles nil)
-
-(modify-all-frames-parameters
- '((right-divider-width . 12)
-   (internal-border-width . 12)))
-(dolist (face '(window-divider
-                window-divider-first-pixel
-                window-divider-last-pixel))
-  (face-spec-reset-face face)
-  (set-face-foreground face (face-attribute 'default :background)))
-(set-face-background 'fringe (face-attribute 'default :background))
-
-(use-package org-journal
-  :ensure t
-  :defer t
-  :init
-  ;; Change default prefix key; needs to be set before loading org-journal
-  (setq org-journal-prefix-key "C-c j ")
-  :config
-  (setq org-journal-dir "~/Notes/journal/"
-        org-journal-date-format "%A, %d %B %Y")
-  (org-journal-mode))
-
-(use-package multiple-cursors
-  :ensure t
-  :config
-  (global-set-key (kbd "C-S-c C-S-c") 'mc/edit-lines)
-  (global-set-key (kbd "C->")         'mc/mark-next-like-this)
-  (global-set-key (kbd "C-<")         'mc/mark-previous-like-this)
-  (global-set-key (kbd "C-c C-<")     'mc/mark-all-like-this)
-  (global-set-key (kbd "C-\"")        'mc/skip-to-next-like-this)
-  (global-set-key (kbd "C-:")         'mc/skip-to-previous-like-this))
-
-;;; tramp
-;;; http://stackoverflow.com/questions/13794433/how-to-disable-autosave-for-tramp-buffers-in-emacs
-(setq tramp-auto-save-directory "/tmp")
-
-;; Confortable buffers
-(keymap-global-set "C-c b" 'ibuffer)
-
-;; Recent Files
-(recentf-mode 1)
-(keymap-global-set "C-c r" 'recentf)
-
-;; Complete
-
-(use-package vertico
-  :ensure t
-  :hook (after-init . vertico-mode))
-
-(use-package marginalia
-  :ensure t
-  :hook (after-init . marginalia-mode))
-
-(use-package orderless
-  :ensure t
-  :config
-  (setq completion-styles '(orderless basic))
-  (setq completion-category-defaults nil)
-  (setq completion-category-overrides nil))
-
-(use-package savehist
-  :ensure nil ; it is built-in
-  :hook (after-init . savehist-mode))
-
-(use-package corfu
-  :ensure t
-  :hook (after-init . global-corfu-mode)
-  :bind (:map corfu-map ("C-," . corfu-complete))
-  :config
-  (setq tab-always-indent 'complete)
-  (setq corfu-preview-current nil)
-  (setq corfu-min-width 20)
-
-  (setq corfu-popupinfo-delay '(1.25 . 0.5))
-  (corfu-popupinfo-mode 1) ; shows documentation after `corfu-popupinfo-delay'
-
-  ;; Sort by input history (no need to modify `corfu-sort-function').
-  (with-eval-after-load 'savehist
-    (corfu-history-mode 1)
-    (add-to-list 'savehist-additional-variables 'corfu-history)))
-
-(use-package nyan-mode
-  :ensure t
-  :config
-  (nyan-mode))
-
-
-(use-package spacious-padding
-  :ensure nil
-  :load-path "/home/ssalva/.emacs.d/manual-packages/spacious-padding"
-  :config
-  ;; These are the default values, but I keep them here for visibility.
-  ;; Also check `spacious-padding-subtle-frame-lines'.
-  (setq spacious-padding-widths
-        '( :internal-border-width 24
-           :header-line-width 0
-           :mode-line-width 0
-           :custom-button-width 0
-           :tab-width 0
-           :right-divider-width 0
-           :scroll-bar-width 0
-           :fringe-width 0))
-
-  (spacious-padding-mode 1)
-
-  ;; Set a key binding if you need to toggle spacious padding.
-  (define-key global-map (kbd "<f8>") #'spacious-padding-mode))
 #+end_src
 
 *** Gammastep
@@ -453,49 +229,35 @@ set -g status-justify "left"
 *** Wofi
 
 #+begin_src css :mkdirp yes :tangle configs/wofi/style.css
+ * {
+    font-family: "Space Mono", monospace; /* The new font */
+    font-size: 14pt;
+    font-weight: bold;
+}
+
 window {
-    background-color: #0B0B0B;
-    color: #D8D8D8;
-    border-radius: 0; /* sharp, CRT-ish */
-    padding: 4px;
-    font-family: "Iosevka", "BlexMono Nerd Font", "Terminus", monospace;
-    font-size: 18px;
+    background-color: rgba(38, 38, 38, 0.95); /* #262626 with transparency */
+    color: #b9b9b9;
+    border: 2px solid #98C379; /* Abduction Green border */
+    border-radius: 0px; /* Keep it boxy/techy */
 }
 
 #input {
-    margin: 4px;
-    padding: 4px 6px;
-    border: 1px solid #f1f1f1;
-    background-color: #111111;
-    color: #f1f1f1;
-}
-
-#inner-box {
-    margin: 4px;
-    padding: 4px 0;
-}
-
-#outer-box {
-    margin: 0;
-    padding: 0;
-}
-
-#scroll {
-    margin: 0;
-    padding: 0;
+    background-color: #1a1a1a;
+    color: #D9967D; /* Typing in Sunset Orange */
+    border: none;
+    border-bottom: 2px solid #585858;
+    padding: 8px 12px;
+    margin: 10px;
 }
 
 #entry {
-    padding: 2px 6px;
+    padding: 10px;
 }
 
-#entry:selected {
-    background-color: #000;
-    color: #FFF;
-}
-
-#text {
-    color: #D8D8D8;
+#entry.selected {
+    background-color: #98C379; /* Green highlight */
+    color: #1a1a1a; /* Dark text on green background */
 }
 #+end_src
 
@@ -507,7 +269,7 @@ window {
   height=390
   columns=1
   show=drun
-  term=alacritty
+  term=footclient
   hide_scroll=true
   layer=top
   orientation=vertical
@@ -515,396 +277,6 @@ window {
   insensitive=true
   dynamic_lines=true
   no_actions=true
-#+end_src
-
-*** Alacritty
-
-#+begin_src toml :mkdirp yes :tangle configs/alacritty/alacritty.toml
-  [general]
-ipc_socket = false
-
-[window]
-padding = { x = 32, y = 32 }
-decorations = "None"
-
-[font]
-# https://github.com/oppiliappan/scientifica
-# normal = { family = "Tamzen", style = "Medium" }
-normal = { family = "knxt", style = "Regular" }
-size = 15.0
-
-[colors.bright]
-black = "0x4F4F4F"
-blue = "0x7CB0B3"
-cyan = "0xB3FFFF"
-green = "0x8FB28F"
-magenta = "0xFCACE3"
-red = "0xDCA3A3"
-white = "0xFFFFEF"
-yellow = "0xE0CF9F"
-
-[colors.normal]
-black = "0x262626"
-blue = "0x6CA0A3"
-cyan = "0x93E0E3"
-green = "0x7F9F7F"
-magenta = "0xDC8CC3"
-red = "0xCC9393"
-white = "0xDCDCCC"
-yellow = "0xD0BF8F"
-
-[colors.primary]
-background = "0x262626"
-foreground = "0xDCDCCC"
-#+end_src
-
-Focus version
-
-#+begin_src toml :mkdirp yes :tangle configs/alacritty/alacritty-focus.toml
-[general]
-ipc_socket = false
-
-[window]
-padding = { x = 32, y = 32 }
-decorations = "None"
-
-[font]
-# https://github.com/oppiliappan/scientifica
-# normal = { family = "Tamzen", style = "Medium" }
-normal = { family = "knxt", style = "Regular" }
-
-size = 15.0
-
-[colors.bright]
-black = "0x4F4F4F"
-blue = "0x7CB0B3"
-cyan = "0xB3FFFF"
-green = "0x8FB28F"
-magenta = "0xFCACE3"
-red = "0xDCA3A3"
-white = "0xFFFFEF"
-yellow = "0xE0CF9F"
-
-[colors.normal]
-black = "0x262626"
-blue = "0x6CA0A3"
-cyan = "0x93E0E3"
-green = "0x7F9F7F"
-magenta = "0xDC8CC3"
-red = "0xCC9393"
-white = "0xDCDCCC"
-yellow = "0xD0BF8F"
-
-[colors.primary]
-background = "0x000000"
-foreground = "0xDCDCCC"
-#+end_src
-
-*** Sway
-
-#+begin_src conf :mkdirp yes :tangle configs/sway/config
-# Read `man 5 sway` for a complete reference.
-
-xwayland disable
-exec dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY SWAYSOCK
-
-### Variables
-font Tamzen 14
-default_border pixel 6
-default_floating_border pixel 6
-smart_borders off
-hide_edge_borders none
-focus_follows_mouse yes
-gaps inner 30px
-gaps outer -13px
-gaps left -23px
-
-# class                 border   background text     indicator child_border
-client.focused          #6CA0A3  #2f2f2f     #DCDCCC  #93E0E3   #6CA0A3
-client.focused_inactive #2f2f2f  #262626     #AFAF87  #2f2f2f   #2f2f2f
-
-# Unfocused: keep bg at #262626, but make border a little lighter
-client.unfocused        #303030  #262626     #AFAF87  #262626   #303030
-
-client.urgent           #CC9393  #262626     #DCDCCC  #CC9393   #CC9393
-client.placeholder      #262626  #262626     #AFAF87  #262626   #262626
-
-
-# Logo key. Use Mod1 for Alt.
-set $mod Mod4
-# Home row direction keys, like vim
-set $left h
-set $down j
-set $up k
-set $right l
-# Your preferred terminal emulator
-set $term alacritty
-
-# Your preferred application launcher
-set $menu wofi --show drun
-
-### Output configuration
-#
-# Default wallpaper (more resolutions are available in /usr/share/backgrounds/sway/)
-output * bg /home/ssalva/Pictures/Wallpapers/linux-viola.svg fill
-
-output eDP-1 scale 1.15
-
-exec swaybg -c 262626
-#
-# Example configuration:
-#
-#   output HDMI-A-1 resolution 1920x1080 position 1920,0
-#
-# You can get the names of your outputs by running: swaymsg -t get_outputs
-
-### Idle configuration
-#
-# Example configuration:
-#
-exec swayidle -w \
-         timeout 300 'swaylock -f -c 000000' \
-         timeout 600 'swaymsg "output * power off"' resume 'swaymsg "output * power on"' \
-         before-sleep 'swaylock -f -c 000000'
-
-# This will lock your screen after 300 seconds of inactivity, then turn off
-# your displays after another 300 seconds, and turn your screens back on when
-# resumed. It will also lock your screen before your computer goes to sleep.
-
-### Input configuration
-#
-# Example configuration:
-#
-input type:touchpad {
-     dwt enabled
-     tap enabled
-     natural_scroll enabled
-     middle_emulation enabled
-}
-
-input type:keyboard {
-    xkb_layout "us"
-}
-
-#
-# You can also configure each device individually.
-# Read `man 5 sway-input` for more information about this section.
-
-### Key bindings
-#
-# Basics:
-#
-    # Start a terminal
-    bindsym $mod+Return exec $term
-    bindsym $mod+Shift+Return exec $term --config-file=/home/ssalva/.config/alacritty/alacritty-focus.toml
-
-    bindsym $mod+e exec alacritty --config-file /home/ssalva/.config/alacritty/alacritty-emacs.toml --command emacs -nw
-    # Kill focused window
-    bindsym $mod+q kill
-
-    # Start your launcher
-    bindsym $mod+x exec $menu
-
-    # Drag floating windows by holding down $mod and left mouse button.
-    # Resize them with right mouse button + $mod.
-    # Despite the name, also works for non-floating windows.
-    # Change normal to inverse to use left mouse button for resizing and right
-    # mouse button for dragging.
-    floating_modifier $mod normal
-
-    # Reload the configuration file
-    bindsym $mod+Shift+c reload
-
-    # Exit sway (logs you out of your Wayland session)
-    bindsym $mod+Shift+e exec swaynag -t warning -m 'You pressed the exit shortcut. Do you really want to exit sway? This will end your Wayland session.' -B 'Yes, exit sway' 'swaymsg exit'
-#
-# Moving around:
-#
-    # Move your focus around
-    bindsym $mod+$left focus left
-    bindsym $mod+$down focus down
-    bindsym $mod+$up focus up
-    bindsym $mod+$right focus right
-    # Or use $mod+[up|down|left|right]
-    bindsym $mod+Left focus left
-    bindsym $mod+Down focus down
-    bindsym $mod+Up focus up
-    bindsym $mod+Right focus right
-
-    # Move the focused window with the same, but add Shift
-    bindsym $mod+Shift+$left move left
-    bindsym $mod+Shift+$down move down
-    bindsym $mod+Shift+$up move up
-    bindsym $mod+Shift+$right move right
-    # Ditto, with arrow keys
-    bindsym $mod+Shift+Left move left
-    bindsym $mod+Shift+Down move down
-    bindsym $mod+Shift+Up move up
-    bindsym $mod+Shift+Right move right
-#
-# Workspaces:
-#
-    # Switch to workspace
-    bindsym $mod+1 workspace number 1
-    bindsym $mod+2 workspace number 2
-    bindsym $mod+3 workspace number 3
-    bindsym $mod+4 workspace number 4
-    bindsym $mod+5 workspace number 5
-    bindsym $mod+6 workspace number 6
-    bindsym $mod+7 workspace number 7
-    bindsym $mod+8 workspace number 8
-    bindsym $mod+9 workspace number 9
-    bindsym $mod+0 workspace number 10
-    # Move focused container to workspace
-    bindsym $mod+Shift+1 move container to workspace number 1
-    bindsym $mod+Shift+2 move container to workspace number 2
-    bindsym $mod+Shift+3 move container to workspace number 3
-    bindsym $mod+Shift+4 move container to workspace number 4
-    bindsym $mod+Shift+5 move container to workspace number 5
-    bindsym $mod+Shift+6 move container to workspace number 6
-    bindsym $mod+Shift+7 move container to workspace number 7
-    bindsym $mod+Shift+8 move container to workspace number 8
-    bindsym $mod+Shift+9 move container to workspace number 9
-    bindsym $mod+Shift+0 move container to workspace number 10
-    # Note: workspaces can have any name you want, not just numbers.
-    # We just use 1-10 as the default.
-#
-# Layout stuff:
-#
-    # You can "split" the current object of your focus with
-    # $mod+b or $mod+v, for horizontal and vertical splits
-    # respectively.
-    bindsym $mod+b splith
-    bindsym $mod+v splitv
-
-    # Switch the current container between different layout styles
-    bindsym $mod+s layout stacking
-    bindsym $mod+w layout tabbed
-    bindsym $mod+t layout toggle split
-
-    # Make the current focus fullscreen
-    bindsym $mod+f fullscreen
-
-    # Toggle the current focus between tiling and floating mode
-    bindsym $mod+Shift+space floating toggle
-
-    # Swap focus between the tiling area and the floating area
-    bindsym $mod+space focus mode_toggle
-
-    # Move focus to the parent container
-    bindsym $mod+a focus parent
-#
-# Scratchpad:
-#
-    # Sway has a "scratchpad", which is a bag of holding for windows.
-    # You can send windows there and get them back later.
-
-    # Move the currently focused window to the scratchpad
-    bindsym $mod+Shift+minus move scratchpad
-
-    # Show the next scratchpad window or hide the focused scratchpad window.
-    # If there are multiple scratchpad windows, this command cycles through them.
-    bindsym $mod+minus scratchpad show
-#
-# Resizing containers:
-#
-mode "resize" {
-    # left will shrink the containers width
-    # right will grow the containers width
-    # up will shrink the containers height
-    # down will grow the containers height
-    bindsym $left resize shrink width 10px
-    bindsym $down resize grow height 10px
-    bindsym $up resize shrink height 10px
-    bindsym $right resize grow width 10px
-
-    # Ditto, with arrow keys
-    bindsym Left resize shrink width 10px
-    bindsym Down resize grow height 10px
-    bindsym Up resize shrink height 10px
-    bindsym Right resize grow width 10px
-
-    # Return to default mode
-    bindsym Return mode "default"
-    bindsym Escape mode "default"
-}
-bindsym $mod+r mode "resize"
-#
-# Utilities:
-#
-
-# Special keys to adjust volume via PulseAudio
-bindsym --locked XF86AudioMute exec pactl set-sink-mute \@DEFAULT_SINK@ toggle
-bindsym --locked XF86AudioLowerVolume exec pactl set-sink-volume \@DEFAULT_SINK@ -5%
-bindsym --locked XF86AudioRaiseVolume exec pactl set-sink-volume \@DEFAULT_SINK@ +5%
-bindsym --locked XF86AudioMicMute exec pactl set-source-mute \@DEFAULT_SOURCE@ toggle
-# Special keys to adjust brightness via brightnessctl
-bindsym --locked XF86MonBrightnessDown exec brightnessctl set 5%-
-bindsym --locked XF86MonBrightnessUp exec brightnessctl set 5%+
-# Special key to take a screenshot with grim
-bindsym Print exec grim
-
-#
-# Status Bar:
-#
-# Read `man 5 sway-bar` for more information about this section.
-bar {
-    swaybar_command waybar
-}
-
-
-# Screenshot
-
-# Screenshots
-## Area selection shortcuts
-set $selected_window swaymsg -t get_tree | jq -r '.. | select(.pid? and .visible?) | .rect | "\(.x),\(.y) \(.width)x\(.height)"' | slurp
-set $focused_window swaymsg -t get_tree | jq -j '.. | select(.type?) | select(.focused).rect | "\(.x),\(.y) \(.width)x\(.height)"'
-set $focused_output swaymsg -t get_outputs | jq -r '.[] | select(.focused) | .name'
-## Screenshot commands
-### Full
-set $screenshot_full grim
-set $screenshot_full_clipboard grim - | wl-copy
-### Selected window
-set $screenshot_selected_window $selected_window | grim -g-
-set $screenshot_selected_window_clipboard $selected_window | grim -g- - | wl-copy
-### Selected area
-set $screenshot_selected_area slurp | grim -g-
-set $screenshot_selected_area_clipboard slurp | grim -g- - | wl-copy
-### Focused window
-set $screenshot_focused_window $focused_window | grim -g-
-set $screenshot_focused_window_clipboard $focused_window | grim -g- - | wl-copy
-### Focused output
-set $screenshot_focused_output grim -o $($focused_output)
-set $screenshot_focused_output_clipboard grim -o $($focused_output) - | wl-copy
-
-## Screenshot mode menu
-set $screenshot "Screenshot: (f) full, (s) select window, (a) select area, (w) focused window, (o) focused output [Ctrl+ saves to clipboard]"
-mode $screenshot {
-    # Full
-    bindsym f exec $screenshot_full; mode "default"
-    bindsym Ctrl+f exec $screenshot_full_clipboard; mode "default"
-    # Selected window
-    bindsym s exec $screenshot_selected_window; mode "default"
-    bindsym Ctrl+s exec $screenshot_selected_window_clipboard; mode "default"
-    # Selected area
-    bindsym a exec $screenshot_selected_area; mode "default"
-    bindsym Ctrl+a exec $screenshot_selected_area_clipboard; mode "default"
-    # Focused window
-    bindsym w exec $screenshot_focused_window; mode "default"
-    bindsym Ctrl+w exec $screenshot_focused_window_clipboard; mode "default"
-    # Focused output
-    bindsym o exec $screenshot_focused_output; mode "default"
-    bindsym Ctrl+o exec $screenshot_focused_output_clipboard; mode "default"
-
-    # Exit screenshot mode menu
-    bindsym Return mode "default"
-    bindsym Escape mode "default"
-    bindsym $mod+Print mode "default"
-}
-bindsym $mod+p mode $screenshot
-
-
-include /etc/sway/config.d/*
 #+end_src
 
 *** Waybar
@@ -954,65 +326,72 @@ include /etc/sway/config.d/*
 #+end_src
 
 #+begin_src css :mkdirp yes :tangle configs/waybar/style.css
-  * {
-      font-family: "Tamzen", monospace;
-      font-size: 12pt;
-      margin: 0;
-      padding: 0;
-  }
+ * {
+    font-family: "SpaceMono Nerd Font", monospace;
+    font-size: 12pt;
+    margin: 0;
+    padding: 0;
+}
 
-  #custom-intro {
-      font-size: 14pt;
-      background-image: url('/home/ssalva/Pictures/Wallpapers/suse.svg');
-      background-position: center;
-      background-repeat: no-repeat;
-      background-size: contain;
-  }
+#custom-intro {
+    font-size: 14pt;
+    background-image: url('/home/ssalva/Pictures/Wallpapers/suse.svg');
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+}
 
-  window#waybar {
-      border: 4px solid #2f2f2f;
-      background: #262626;
-  }
+window#waybar {
+    border-bottom: 4px solid #AFAF87; 
+    background: #262626;
+}
 
-  #workspaces button {
-      padding: 0 8px;
-      background: transparent;
-      color: #8da0b0;
-      border: none;
-      border-radius: 0;
-  }
+#workspaces button {
+    padding: 0 8px;
+    background: transparent;
+    color: #7c7c7c;
+    border: none;
+    border-radius: 0;
+}
 
-  #workspaces button.focused {
-      color: #64d0f0;
-      background: #171717;
-  }
+#workspaces button.focused {
+    color: #D9967D;
+    background: #171717;
+}
 
-  #mode {
-      color: #64d0f0;
-      font-size: 10pt;
-  }
+#mode {
+    color: #98C379;
+    font-size: 10pt;
+    font-weight: bold;
+}
 
-  #workspaces button.urgent {
-      background: #ff8095;
-  }
+#workspaces button.urgent {
+    background: #98C379;
+    color: #262626;
+}
 
-  #cpu, #memory, #battery, #clock {
-      padding: 0 6px;
-      color: #f1f1f1;
-  }
+#cpu, #memory, #battery, #clock {
+    padding: 0 6px;
+    color: #b9b9b9;
+}
 
-  #battery.charging {
-      color: #2fc584;
-  }
+#battery.charging {
+    color: #98C379;
+}
 
-  #battery.warning {
-      color: #e0b060;
-  }
+#battery.warning {
+    color: #D9967D;
+    animation-name: blink;
+    animation-duration: 0.5s;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+}
 
-  #clock {
-      color: #f1f1f1;
-      padding-right: 8px;
-  }
+#clock {
+    color: #f1f1f1;
+    padding-right: 8px;
+}
 #+end_src
 
 *** Fastfetch
@@ -1071,8 +450,333 @@ include /etc/sway/config.d/*
 *** Swaylock
 
 #+BEGIN_SRC conf :mkdirp yes :tangle configs/swaylock/config
-  image=~/Pictures/Wallpapers/saturn.png
+  image=~/Pictures/Wallpapers/wp.png
   scaling=fill
 
-  font=Iosevka Etoile
+  font=SpaceMono Nerd Font
 #+END_SRC
+
+** Sway
+
+#+begin_src conf :mkdirp yes :tangle configs/sway/config
+  # Read `man 5 sway` for a complete reference.
+  xwayland disable
+  exec dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY SWAYSOCK
+
+  ### Variables
+  font SpaceMono Nerd Font 12
+  default_border pixel 3
+  default_floating_border pixel 4
+  smart_borders off
+  hide_edge_borders none
+  focus_follows_mouse yes
+  gaps inner 30px
+  gaps outer -13px
+  gaps left -23px
+
+  set $base_bg     #262626
+  set $sunset      #D9967D
+  set $saucer_grey #AFAF87
+  set $abduct_green #98C379
+  set $text_light  #E0E0E0
+
+  # class                 border       background  text         indicator     child_border
+  client.focused          $sunset      $base_bg    $text_light  $sunset       $sunset
+  client.focused_inactive $base_bg     $base_bg    $saucer_grey $base_bg      $base_bg
+  client.unfocused        $base_bg     $base_bg    #585858      $base_bg      $base_bg
+  client.urgent           $abduct_green $base_bg   $text_light  $abduct_green $abduct_green
+  client.placeholder      $base_bg     $base_bg    $saucer_grey $base_bg      $base_bg
+
+
+  # Logo key. Use Mod1 for Alt.
+  set $mod Mod4
+  # Home row direction keys, like vim
+  set $left h
+  set $down j
+  set $up k
+  set $right l
+
+  # Your preferred application launcher
+  set $menu wofi --show drun
+
+  ### Output configuration
+  #
+  # Default wallpaper (more resolutions are available in /usr/share/backgrounds/sway/)
+  output * bg ~/Pictures/Wallpapers/wallhaven-d836qg.jpg fill
+
+  output eDP-1 scale 1.15
+
+  exec swaybg -c 262626
+  #
+  # Example configuration:
+  #
+  #   output HDMI-A-1 resolution 1920x1080 position 1920,0
+  #
+  # You can get the names of your outputs by running: swaymsg -t get_outputs
+
+  ### Idle configuration
+  #
+  # Example configuration:
+  #
+  exec swayidle -w \
+  timeout 300 'swaylock -f' \
+  timeout 600 'swaymsg "output * power off"' resume 'swaymsg "output * power on"' \
+  before-sleep 'swaylock -f'
+
+  # This will lock your screen after 300 seconds of inactivity, then turn off
+  # your displays after another 300 seconds, and turn your screens back on when
+  # resumed. It will also lock your screen before your computer goes to sleep.
+
+  ### Input configuration
+  #
+  # Example configuration:
+  #
+  input type:touchpad {
+  dwt enabled
+  tap enabled
+  natural_scroll enabled
+  middle_emulation enabled
+  }
+
+  input type:keyboard {
+  xkb_layout "us"
+  }
+
+  #
+  # You can also configure each device individually.
+  # Read `man 5 sway-input` for more information about this section.
+
+  ### Key bindings
+  #
+  # Basics:
+  #
+  # Start a terminal
+  bindsym $mod+Return exec footclient
+  bindsym $mod+Shift+Return exec foot --config ~/.config/foot/foot-focus.ini
+
+  bindsym $mod+e exec emacsclient -c -a ''
+
+  bindsym $mod+Shift+i exec swaylock -f
+  # Kill focused window
+  bindsym $mod+q kill
+
+  # Start your launcher
+  bindsym $mod+x exec $menu
+
+  # Drag floating windows by holding down $mod and left mouse button.
+  # Resize them with right mouse button + $mod.
+  # Despite the name, also works for non-floating windows.
+  # Change normal to inverse to use left mouse button for resizing and right
+  # mouse button for dragging.
+  floating_modifier $mod normal
+
+  # Reload the configuration file
+  bindsym $mod+Shift+c reload
+
+  # Exit sway (logs you out of your Wayland session)
+  bindsym $mod+Shift+e exec swaynag -t warning -m 'You pressed the exit shortcut. Do you really want to exit sway? This will end your Wayland session.' -B 'Yes, exit sway' 'swaymsg exit'
+  #
+  # Moving around:
+  #
+  # Move your focus around
+  bindsym $mod+$left focus left
+  bindsym $mod+$down focus down
+  bindsym $mod+$up focus up
+  bindsym $mod+$right focus right
+  # Or use $mod+[up|down|left|right]
+  bindsym $mod+Left focus left
+  bindsym $mod+Down focus down
+  bindsym $mod+Up focus up
+  bindsym $mod+Right focus right
+
+  # Move the focused window with the same, but add Shift
+  bindsym $mod+Shift+$left move left
+  bindsym $mod+Shift+$down move down
+  bindsym $mod+Shift+$up move up
+  bindsym $mod+Shift+$right move right
+  # Ditto, with arrow keys
+  bindsym $mod+Shift+Left move left
+  bindsym $mod+Shift+Down move down
+  bindsym $mod+Shift+Up move up
+  bindsym $mod+Shift+Right move right
+  #
+  # Workspaces:
+  #
+  # Switch to workspace
+  bindsym $mod+1 workspace number 1
+  bindsym $mod+2 workspace number 2
+  bindsym $mod+3 workspace number 3
+  bindsym $mod+4 workspace number 4
+  bindsym $mod+5 workspace number 5
+  bindsym $mod+6 workspace number 6
+  bindsym $mod+7 workspace number 7
+  bindsym $mod+8 workspace number 8
+  bindsym $mod+9 workspace number 9
+  bindsym $mod+0 workspace number 10
+  # Move focused container to workspace
+  bindsym $mod+Shift+1 move container to workspace number 1
+  bindsym $mod+Shift+2 move container to workspace number 2
+  bindsym $mod+Shift+3 move container to workspace number 3
+  bindsym $mod+Shift+4 move container to workspace number 4
+  bindsym $mod+Shift+5 move container to workspace number 5
+  bindsym $mod+Shift+6 move container to workspace number 6
+  bindsym $mod+Shift+7 move container to workspace number 7
+  bindsym $mod+Shift+8 move container to workspace number 8
+  bindsym $mod+Shift+9 move container to workspace number 9
+  bindsym $mod+Shift+0 move container to workspace number 10
+  # Note: workspaces can have any name you want, not just numbers.
+  # We just use 1-10 as the default.
+  #
+  # Layout stuff:
+  #
+  # You can "split" the current object of your focus with
+  # $mod+b or $mod+v, for horizontal and vertical splits
+  # respectively.
+  bindsym $mod+b splith
+  bindsym $mod+v splitv
+
+  # Switch the current container between different layout styles
+  bindsym $mod+s layout stacking
+  bindsym $mod+w layout tabbed
+  bindsym $mod+t layout toggle split
+
+  # Make the current focus fullscreen
+  bindsym $mod+f fullscreen
+
+  # Toggle the current focus between tiling and floating mode
+  bindsym $mod+Shift+space floating toggle
+
+  # Swap focus between the tiling area and the floating area
+  bindsym $mod+space focus mode_toggle
+
+  # Move focus to the parent container
+  bindsym $mod+a focus parent
+  #
+  # Scratchpad:
+  #
+  # Sway has a "scratchpad", which is a bag of holding for windows.
+  # You can send windows there and get them back later.
+
+  # Move the currently focused window to the scratchpad
+  bindsym $mod+Shift+minus move scratchpad
+
+  # Show the next scratchpad window or hide the focused scratchpad window.
+  # If there are multiple scratchpad windows, this command cycles through them.
+  bindsym $mod+minus scratchpad show
+  #
+  # Resizing containers:
+  #
+  mode "resize" {
+  # left will shrink the containers width
+  # right will grow the containers width
+  # up will shrink the containers height
+  # down will grow the containers height
+  bindsym $left resize shrink width 10px
+  bindsym $down resize grow height 10px
+  bindsym $up resize shrink height 10px
+  bindsym $right resize grow width 10px
+
+  # Ditto, with arrow keys
+  bindsym Left resize shrink width 10px
+  bindsym Down resize grow height 10px
+  bindsym Up resize shrink height 10px
+  bindsym Right resize grow width 10px
+
+  # Return to default mode
+  bindsym Return mode "default"
+  bindsym Escape mode "default"
+  }
+  bindsym $mod+r mode "resize"
+  #
+  # Utilities:
+  #
+
+  # Special key to take a screenshot with grim
+  bindsym Print exec grim
+
+
+  # Media keys, redefined for wob support
+  bindsym --no-warn --locked XF86AudioMicMute exec pactl set-source-mute @DEFAULT_SOURCE@ toggle
+
+  bindsym --no-warn --locked XF86MonBrightnessDown exec brightnessctl -q set 5%- && ( echo $((`brightnessctl get` * 100 / `brightnessctl m`)) > /tmp/wobpipe )
+  bindsym --no-warn --locked XF86MonBrightnessUp exec brightnessctl -q set +5% && ( echo $((`brightnessctl get` * 100 / `brightnessctl m`)) > /tmp/wobpipe )
+
+  bindsym --no-warn --locked XF86AudioRaiseVolume exec pamixer --allow-boost -ui 2 && pamixer --get-volume > /tmp/wobpipe
+  bindsym --no-warn --locked XF86AudioLowerVolume exec pamixer --allow-boost -ud 2 && pamixer --get-volume > /tmp/wobpipe
+  bindsym --no-warn --locked XF86AudioMute exec pamixer --toggle-mute && ( pamixer --get-mute && echo 0 > /tmp/wobpipe )
+
+
+  #
+  # Status Bar:
+  #
+  # Read `man 5 sway-bar` for more information about this section.
+  bar {
+  swaybar_command waybar
+  }
+
+
+  # Screenshot
+
+  # Screenshots
+  ## Area selection shortcuts
+  set $selected_window swaymsg -t get_tree | jq -r '.. | select(.pid? and .visible?) | .rect | "\(.x),\(.y) \(.width)x\(.height)"' | slurp
+  set $focused_window swaymsg -t get_tree | jq -j '.. | select(.type?) | select(.focused).rect | "\(.x),\(.y) \(.width)x\(.height)"'
+  set $focused_output swaymsg -t get_outputs | jq -r '.[] | select(.focused) | .name'
+  ## Screenshot commands
+  ### Full
+  set $screenshot_full grim
+  set $screenshot_full_clipboard grim - | wl-copy
+  ### Selected window
+  set $screenshot_selected_window $selected_window | grim -g-
+  set $screenshot_selected_window_clipboard $selected_window | grim -g- - | wl-copy
+  ### Selected area
+  set $screenshot_selected_area slurp | grim -g-
+  set $screenshot_selected_area_clipboard slurp | grim -g- - | wl-copy
+  ### Focused window
+  set $screenshot_focused_window $focused_window | grim -g-
+  set $screenshot_focused_window_clipboard $focused_window | grim -g- - | wl-copy
+  ### Focused output
+  set $screenshot_focused_output grim -o $($focused_output)
+  set $screenshot_focused_output_clipboard grim -o $($focused_output) - | wl-copy
+
+  ## Screenshot mode menu
+  set $screenshot "Screenshot: (f) full, (s) select window, (a) select area, (w) focused window, (o) focused output [Ctrl+ saves to clipboard]"
+  mode $screenshot {
+  # Full
+  bindsym f exec $screenshot_full; mode "default"
+  bindsym Ctrl+f exec $screenshot_full_clipboard; mode "default"
+  # Selected window
+  bindsym s exec $screenshot_selected_window; mode "default"
+  bindsym Ctrl+s exec $screenshot_selected_window_clipboard; mode "default"
+  # Selected area
+  bindsym a exec $screenshot_selected_area; mode "default"
+  bindsym Ctrl+a exec $screenshot_selected_area_clipboard; mode "default"
+  # Focused window
+  bindsym w exec $screenshot_focused_window; mode "default"
+  bindsym Ctrl+w exec $screenshot_focused_window_clipboard; mode "default"
+  # Focused output
+  bindsym o exec $screenshot_focused_output; mode "default"
+  bindsym Ctrl+o exec $screenshot_focused_output_clipboard; mode "default"
+
+  # Exit screenshot mode menu
+  bindsym Return mode "default"
+  bindsym Escape mode "default"
+  bindsym $mod+Print mode "default"
+  }
+  bindsym $mod+p mode $screenshot
+
+  exec_always {
+  systemctl --user import-environment
+  gsettings set org.gnome.desktop.interface gtk-theme 'Adwaita-dark'
+  gsettings set org.gnome.desktop.interface icon-theme 'Adwaita'
+  gsettings set org.gnome.desktop.interface cursor-theme 'Adwaita'
+  gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
+  rm /tmp/wobpipe
+  exec mkfifo /tmp/wobpipe
+  tail -f /tmp/wobpipe | wob
+  }
+
+  exec /usr/libexec/polkit-gnome-authentication-agent-1
+
+  include /etc/sway/config.d/*
+#+end_src

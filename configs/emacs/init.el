@@ -80,6 +80,11 @@ The DWIM behaviour of this command is as follows:
   :bind (("C-x g" . magit-status)))
 
 ;; http://stackoverflow.com/questions/13794433/how-to-disable-autosave-for-tramp-buffers-in-emacs
+;; Don't use VC on remote (TRAMP) files
+(setq vc-ignore-dir-regexp
+      (format "\\(%s\\)\\|\\(%s\\)"
+              vc-ignore-dir-regexp
+              tramp-file-name-regexp))
 (with-eval-after-load 'tramp
   (setq tramp-auto-save-directory "/tmp")
   (setq read-process-output-max (* 1024 1024)) ;; 1mb
@@ -124,8 +129,6 @@ The DWIM behaviour of this command is as follows:
   :ensure t
   :config
   (setq org-modern-hide-stars nil)
-  (org-pretty-entities nil)
-
   (add-hook 'org-mode-hook #'org-modern-mode)
   (add-hook 'org-agenda-finalize-hook #'org-modern-agenda))
 
