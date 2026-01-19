@@ -74,25 +74,25 @@ The DWIM behaviour of this command is as follows:
 ;; Magit
 (use-package magit
   :ensure t
+  :bind ("C-x g" . magit-status)
   :config
-  (setq magit-auto-revert-mode nil)
-  (setq magit-save-repository-buffers 'dontask)
-  :bind (("C-x g" . magit-status)))
+  (setq magit-auto-revert-mode nil) 
+  (setq magit-save-repository-buffers 'dontask))
 
 ;; http://stackoverflow.com/questions/13794433/how-to-disable-autosave-for-tramp-buffers-in-emacs
-;; Don't use VC on remote (TRAMP) files
-(setq vc-ignore-dir-regexp
-      (format "\\(%s\\)\\|\\(%s\\)"
-              vc-ignore-dir-regexp
-              tramp-file-name-regexp))
 (with-eval-after-load 'tramp
   (setq tramp-auto-save-directory "/tmp")
   (setq read-process-output-max (* 1024 1024)) ;; 1mb
   (setq remote-file-name-inhibit-cache nil)
   (setq remote-file-name-inhibit-locks t)
   (setq tramp-verbose 1)
+  (setq tramp-use-scp-direct-remote-copying t)
+  (setq tramp-direct-async-process t)
   (add-to-list 'tramp-remote-path 'tramp-own-remote-path)
   (setq tramp-direct-async-process t))
+
+(with-eval-after-load 'eglot
+  (setq project-vc-extra-root-markers '(".git")))
 
 (use-package dired
   :ensure nil
@@ -165,7 +165,7 @@ The DWIM behaviour of this command is as follows:
 
 
 
-(setq nano-font-family-monospaced "Iosevka Term Curly")
+(setq nano-font-family-monospaced "SpaceMono Nerd Font")
 (setq nano-font-family-proportional "Iosevka Etoile")
 (setq nano-font-size 14)
 
@@ -244,8 +244,3 @@ The DWIM behaviour of this command is as follows:
 
   ;; Set a key binding if you need to toggle spacious padding.
   (define-key global-map (kbd "<f8>") #'spacious-padding-mode))
-
-(use-package nyan-mode
-  :ensure t
-  :config
-  (nyan-mode))
